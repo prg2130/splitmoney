@@ -118,6 +118,13 @@ Output raw numbers without thousands separators. Use the tool provided.`,
     }
 
     const data = await response.json();
+
+    // Check for truncated response
+    const finishReason = data.choices?.[0]?.finish_reason;
+    if (finishReason === "length" || finishReason === "max_tokens") {
+      throw new Error("AI response was truncated. Please try with a clearer photo.");
+    }
+
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
     if (!toolCall) {
