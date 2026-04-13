@@ -17,6 +17,7 @@ const Index = () => {
   const [items, setItems] = useState<BillItem[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
   const [currency, setCurrency] = useState("₹");
+  const [billTotal, setBillTotal] = useState<number | null>(null);
   const { toast } = useToast();
 
   const handleImageCaptured = async (base64: string) => {
@@ -43,6 +44,7 @@ const Index = () => {
 
       setItems(billItems);
       setCurrency(data.currency || "₹");
+      setBillTotal(data.billTotal || null);
       setStep("people");
 
       toast({
@@ -128,7 +130,7 @@ const Index = () => {
         )}
 
         {step === "results" && (
-          <ResultsView results={results} currency={currency} onReset={handleReset} />
+          <ResultsView results={results} currency={currency} billTotal={billTotal} onReset={handleReset} />
         )}
 
         {/* Scanned items preview (during people step) */}
