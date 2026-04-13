@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { PersonTotal, ExtraSplitMethod } from "@/lib/splitbill";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Share2 } from "lucide-react";
+import { RotateCcw, Share2, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ResultsViewProps {
@@ -14,7 +15,11 @@ interface ResultsViewProps {
 
 const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }: ResultsViewProps) => {
   const { toast } = useToast();
+  const [rating, setRating] = useState(0);
+  const [hoveredStar, setHoveredStar] = useState(0);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
   const splitTotal = results.reduce((s, r) => s + r.total, 0);
+
   const grandTotal = billTotal ?? splitTotal;
   // Scale each person's total so splits add up to the actual bill total
   const scaleFactor = splitTotal > 0 ? grandTotal / splitTotal : 1;
@@ -109,6 +114,46 @@ const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }
           Share
         </Button>
       </div>
+
+      {/* Star Rating Survey */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="rounded-xl border bg-card p-4 text-center space-y-3"
+      >
+        {ratingSubmitted ? (
+          <p className="text-sm text-muted-foreground">Thanks for your feedback! ⭐</p>
+        ) : (
+          <>
+            <p className="text-sm font-medium text-foreground">How was your experience?</p>
+            <div className="flex justify-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onMouseEnter={() => setHoveredStar(star)}
+                  onMouseLeave={() => setHoveredStar(0)}
+                  onClick={() => {
+                    setRating(star);
+                    setRatingSubmitted(true);
+                    toast({ title: "Thank you!", description: `You rated us ${star}/5 stars` });
+                  }}
+                  className="p-1 transition-transform hover:scale-110"
+                >
+                  <Star
+                    className={`h-7 w-7 transition-colors ${
+                      star <= (hoveredStar || rating)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-muted-foreground/40"
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">Tap a star to rate</p>
+          </>
+        )}
+      </motion.div>
     </motion.div>
   );
 };
