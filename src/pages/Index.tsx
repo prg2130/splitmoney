@@ -133,7 +133,7 @@ const Index = () => {
         )}
 
         {step === "results" && (
-          <ResultsView results={results} currency={currency} billTotal={billTotal} onReset={handleReset} />
+          <ResultsView results={results} currency={currency} billTotal={billTotal} extraSplitMethod={extraSplitMethod} onReset={handleReset} />
         )}
 
         {/* Scanned items preview (during people step) */}
