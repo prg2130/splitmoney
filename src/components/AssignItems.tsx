@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { BillItem, Person } from "@/lib/splitbill";
+import { BillItem, Person, ExtraSplitMethod } from "@/lib/splitbill";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowRight, ArrowLeft, Users } from "lucide-react";
+import { ArrowRight, ArrowLeft, Users, Percent, Equal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AssignItemsProps {
@@ -12,10 +12,13 @@ interface AssignItemsProps {
   onContinue: () => void;
   onBack: () => void;
   currency: string;
+  extraSplitMethod: ExtraSplitMethod;
+  onExtraSplitMethodChange: (method: ExtraSplitMethod) => void;
 }
 
-const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currency }: AssignItemsProps) => {
+const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currency, extraSplitMethod, onExtraSplitMethodChange }: AssignItemsProps) => {
   const foodItems = items.filter((i) => !i.isExtra);
+  const hasExtras = items.some((i) => i.isExtra);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const currentItem = foodItems[currentIndex];
@@ -158,6 +161,47 @@ const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currenc
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Tax/charges split method - show on last item */}
+      {currentIndex === foodItems.length - 1 && hasExtras && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border bg-card p-4 space-y-2"
+        >
+          <p className="text-sm font-semibold text-foreground">How to split taxes & charges?</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => onExtraSplitMethodChange("proportional")}
+              className={`flex items-center gap-2 rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all ${
+                extraSplitMethod === "proportional"
+                  ? "border-primary bg-accent text-accent-foreground"
+                  : "border-border bg-card text-foreground hover:border-primary/30"
+              }`}
+            >
+              <Percent className="h-4 w-4 shrink-0" />
+              <div className="text-left">
+                <p className="font-medium">By order</p>
+                <p className="text-xs text-muted-foreground">Based on what you ate</p>
+              </div>
+            </button>
+            <button
+              onClick={() => onExtraSplitMethodChange("equal")}
+              className={`flex items-center gap-2 rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all ${
+                extraSplitMethod === "equal"
+                  ? "border-primary bg-accent text-accent-foreground"
+                  : "border-border bg-card text-foreground hover:border-primary/30"
+              }`}
+            >
+              <Equal className="h-4 w-4 shrink-0" />
+              <div className="text-left">
+                <p className="font-medium">Equally</p>
+                <p className="text-xs text-muted-foreground">Same for everyone</p>
+              </div>
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Quick overview dots */}
       <div className="flex justify-center gap-1 flex-wrap">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Receipt } from "lucide-react";
-import { BillItem, Person, calculateSplit } from "@/lib/splitbill";
+import { BillItem, Person, ExtraSplitMethod, calculateSplit } from "@/lib/splitbill";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import BillUpload from "@/components/BillUpload";
@@ -18,6 +18,7 @@ const Index = () => {
   const [people, setPeople] = useState<Person[]>([]);
   const [currency, setCurrency] = useState("₹");
   const [billTotal, setBillTotal] = useState<number | null>(null);
+  const [extraSplitMethod, setExtraSplitMethod] = useState<ExtraSplitMethod>("proportional");
   const { toast } = useToast();
 
   const handleImageCaptured = async (base64: string) => {
@@ -69,7 +70,7 @@ const Index = () => {
     setPeople([]);
   };
 
-  const results = step === "results" ? calculateSplit(items, people) : [];
+  const results = step === "results" ? calculateSplit(items, people, extraSplitMethod) : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,11 +127,13 @@ const Index = () => {
             onContinue={() => setStep("results")}
             onBack={() => setStep("people")}
             currency={currency}
+            extraSplitMethod={extraSplitMethod}
+            onExtraSplitMethodChange={setExtraSplitMethod}
           />
         )}
 
         {step === "results" && (
-          <ResultsView results={results} currency={currency} billTotal={billTotal} onReset={handleReset} />
+          <ResultsView results={results} currency={currency} billTotal={billTotal} extraSplitMethod={extraSplitMethod} onReset={handleReset} />
         )}
 
         {/* Scanned items preview (during people step) */}

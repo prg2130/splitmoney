@@ -1,3 +1,5 @@
+export type ExtraSplitMethod = "proportional" | "equal";
+
 export interface BillItem {
   id: string;
   name: string;
@@ -36,7 +38,11 @@ export function getColor(index: number): string {
   return COLORS[index % COLORS.length];
 }
 
-export function calculateSplit(items: BillItem[], people: Person[]): PersonTotal[] {
+export function calculateSplit(
+  items: BillItem[],
+  people: Person[],
+  extraSplitMethod: ExtraSplitMethod = "proportional"
+): PersonTotal[] {
   const foodItems = items.filter((i) => !i.isExtra);
   const extraItems = items.filter((i) => i.isExtra);
   const totalExtras = extraItems.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -54,8 +60,13 @@ export function calculateSplit(items: BillItem[], people: Person[]): PersonTotal
       }
     });
 
-    // Proportional share of extras (tax/tip/service)
-    const extrasShare = totalFood > 0 ? (subtotal / totalFood) * totalExtras : 0;
+    // Share of extras based on chosen method
+    let extrasShare: number;
+    if (extraSplitMethod === "equal") {
+      extrasShare = totalExtras / people.length;
+    } else {
+      extrasShare = totalFood > 0 ? (subtotal / totalFood) * totalExtras : 0;
+    }
 
     return {
       person,
