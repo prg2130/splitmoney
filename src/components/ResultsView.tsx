@@ -15,7 +15,10 @@ interface ResultsViewProps {
 
 const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }: ResultsViewProps) => {
   const { toast } = useToast();
-  const splitTotal = results.reduce((s, r) => s + r.total, 0);
+  const [rating, setRating] = useState(0);
+  const [hoveredStar, setHoveredStar] = useState(0);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+
   const grandTotal = billTotal ?? splitTotal;
   // Scale each person's total so splits add up to the actual bill total
   const scaleFactor = splitTotal > 0 ? grandTotal / splitTotal : 1;
