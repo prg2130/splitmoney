@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { BillItem, Person } from "@/lib/splitbill";
+import { BillItem, Person, ExtraSplitMethod } from "@/lib/splitbill";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowRight, ArrowLeft, Users } from "lucide-react";
+import { ArrowRight, ArrowLeft, Users, Percent, Equal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AssignItemsProps {
@@ -12,9 +12,11 @@ interface AssignItemsProps {
   onContinue: () => void;
   onBack: () => void;
   currency: string;
+  extraSplitMethod: ExtraSplitMethod;
+  onExtraSplitMethodChange: (method: ExtraSplitMethod) => void;
 }
 
-const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currency }: AssignItemsProps) => {
+const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currency, extraSplitMethod, onExtraSplitMethodChange }: AssignItemsProps) => {
   const foodItems = items.filter((i) => !i.isExtra);
   const [currentIndex, setCurrentIndex] = useState(0);
 
