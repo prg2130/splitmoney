@@ -18,6 +18,7 @@ const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  const splitTotal = results.reduce((s, r) => s + r.total, 0);
 
   const grandTotal = billTotal ?? splitTotal;
   // Scale each person's total so splits add up to the actual bill total
