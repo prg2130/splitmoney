@@ -7,15 +7,23 @@ import { useToast } from "@/hooks/use-toast";
 interface ResultsViewProps {
   results: PersonTotal[];
   currency: string;
+  billTotal: number | null;
   onReset: () => void;
 }
 
-const ResultsView = ({ results, currency, onReset }: ResultsViewProps) => {
+const ResultsView = ({ results, currency, billTotal, onReset }: ResultsViewProps) => {
   const { toast } = useToast();
-  const grandTotal = results.reduce((s, r) => s + r.total, 0);
+  const splitTotal = results.reduce((s, r) => s + r.total, 0);
+  const grandTotal = billTotal ?? splitTotal;
+  // Scale each person's total so splits add up to the actual bill total
+  const scaleFactor = splitTotal > 0 ? grandTotal / splitTotal : 1;
+  const adjustedResults = results.map((r) => ({
+    ...r,
+    total: Math.round(r.total * scaleFactor * 100) / 100,
+  }));
 
   const handleShare = () => {
-    const text = results
+    const text = adjustedResults
       .map((r) => `${r.person.name}: ${currency}${r.total.toFixed(2)}`)
       .join("\n");
     const full = `🧾 Bill Split\n\n${text}\n\nTotal: ${currency}${grandTotal.toFixed(2)}`;
@@ -40,7 +48,7 @@ const ResultsView = ({ results, currency, onReset }: ResultsViewProps) => {
       </div>
 
       <div className="space-y-3">
-        {results.map((r, i) => (
+        {adjustedResults.map((r, i) => (
           <motion.div
             key={r.person.id}
             initial={{ opacity: 0, x: -20 }}
