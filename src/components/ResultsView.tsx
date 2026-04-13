@@ -48,7 +48,7 @@ const ResultsView = ({ results, currency, billTotal, onReset }: ResultsViewProps
       </div>
 
       <div className="space-y-3">
-        {results.map((r, i) => (
+        {adjustedResults.map((r, i) => (
           <motion.div
             key={r.person.id}
             initial={{ opacity: 0, x: -20 }}
