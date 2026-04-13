@@ -18,6 +18,7 @@ interface AssignItemsProps {
 
 const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currency, extraSplitMethod, onExtraSplitMethodChange }: AssignItemsProps) => {
   const foodItems = items.filter((i) => !i.isExtra);
+  const hasExtras = items.some((i) => i.isExtra);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const currentItem = foodItems[currentIndex];
