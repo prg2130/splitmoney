@@ -1,41 +1,73 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Person, Expense, calculateBalances, getColor } from "@/lib/splitbill";
-import AddPerson from "@/components/AddPerson";
-import AddExpense from "@/components/AddExpense";
-import ExpenseList from "@/components/ExpenseList";
-import BalanceSummary from "@/components/BalanceSummary";
-import { X, Receipt } from "lucide-react";
+import { Receipt } from "lucide-react";
+import { BillItem, Person, calculateSplit } from "@/lib/splitbill";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import BillUpload from "@/components/BillUpload";
+import AddPeople from "@/components/AddPeople";
+import AssignItems from "@/components/AssignItems";
+import ResultsView from "@/components/ResultsView";
+
+type Step = "upload" | "people" | "assign" | "results";
 
 const Index = () => {
+  const [step, setStep] = useState<Step>("upload");
+  const [isScanning, setIsScanning] = useState(false);
+  const [items, setItems] = useState<BillItem[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [currency, setCurrency] = useState("₹");
+  const { toast } = useToast();
 
-  const balances = useMemo(() => calculateBalances(people, expenses), [people, expenses]);
-  const total = useMemo(() => expenses.reduce((s, e) => s + e.amount, 0), [expenses]);
+  const handleImageCaptured = async (base64: string) => {
+    setIsScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("scan-bill", {
+        body: { imageBase64: base64 },
+      });
 
-  const addPerson = (name: string) => {
-    setPeople((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), name, color: getColor(prev.length) },
-    ]);
+      if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      const billItems: BillItem[] = (data.items || []).map((item: any) => ({
+        id: crypto.randomUUID(),
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity || 1,
+        isExtra: item.isExtra || false,
+        assignedTo: [],
+      }));
+
+      setItems(billItems);
+      setCurrency(data.currency || "₹");
+      setStep("people");
+
+      toast({
+        title: "Bill scanned!",
+        description: `Found ${billItems.filter((i) => !i.isExtra).length} items`,
+      });
+    } catch (err: any) {
+      console.error("Scan error:", err);
+      toast({
+        title: "Scan failed",
+        description: err.message || "Could not read the bill. Try a clearer photo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScanning(false);
+    }
   };
 
-  const removePerson = (id: string) => {
-    setPeople((prev) => prev.filter((p) => p.id !== id));
-    setExpenses((prev) => prev.filter((e) => e.paidById !== id && !e.splitAmong.includes(id)));
+  const handleReset = () => {
+    setStep("upload");
+    setItems([]);
+    setPeople([]);
   };
 
-  const addExpense = (description: string, amount: number, paidById: string, splitAmong: string[]) => {
-    setExpenses((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), description, amount, paidById, splitAmong, date: new Date().toISOString() },
-    ]);
-  };
-
-  const deleteExpense = (id: string) => {
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
-  };
+  const results = step === "results" ? calculateSplit(items, people) : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,54 +82,87 @@ const Index = () => {
             <Receipt className="h-7 w-7 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">SplitBill</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Split expenses, not friendships</p>
+          <p className="mt-1 text-sm text-muted-foreground">Scan · Assign · Split</p>
         </motion.div>
 
-        <div className="space-y-6">
-          {/* People */}
-          <section className="space-y-3">
-            <AddPerson onAdd={addPerson} />
-            {people.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {people.map((person) => (
-                  <motion.span
-                    key={person.id}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-primary-foreground"
-                    style={{ backgroundColor: person.color }}
-                  >
-                    {person.name}
-                    <button onClick={() => removePerson(person.id)} className="ml-0.5 rounded-full p-0.5 hover:bg-foreground/10">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </motion.span>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Add Expense */}
-          <AddExpense people={people} onAdd={addExpense} />
-
-          {/* Total */}
-          {total > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="rounded-xl bg-primary px-5 py-4 text-primary-foreground"
-            >
-              <p className="text-sm opacity-80">Total expenses</p>
-              <p className="text-3xl font-bold">${total.toFixed(2)}</p>
-            </motion.div>
-          )}
-
-          {/* Balances */}
-          <BalanceSummary balances={balances} people={people} />
-
-          {/* Expense List */}
-          <ExpenseList expenses={expenses} people={people} onDelete={deleteExpense} />
+        {/* Steps indicator */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          {(["upload", "people", "assign", "results"] as Step[]).map((s, i) => (
+            <div key={s} className="flex items-center gap-2">
+              <div
+                className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                  s === step
+                    ? "bg-primary scale-125"
+                    : (["upload", "people", "assign", "results"].indexOf(step) > i)
+                    ? "bg-success"
+                    : "bg-muted-foreground/30"
+                }`}
+              />
+              {i < 3 && <div className="w-8 h-px bg-border" />}
+            </div>
+          ))}
         </div>
+
+        {/* Step content */}
+        {step === "upload" && (
+          <BillUpload onImageCaptured={handleImageCaptured} isScanning={isScanning} />
+        )}
+
+        {step === "people" && (
+          <AddPeople
+            people={people}
+            onPeopleChange={setPeople}
+            onContinue={() => setStep("assign")}
+          />
+        )}
+
+        {step === "assign" && (
+          <AssignItems
+            items={items}
+            people={people}
+            onItemsChange={setItems}
+            onContinue={() => setStep("results")}
+            onBack={() => setStep("people")}
+            currency={currency}
+          />
+        )}
+
+        {step === "results" && (
+          <ResultsView results={results} currency={currency} onReset={handleReset} />
+        )}
+
+        {/* Scanned items preview (during people step) */}
+        {step === "people" && items.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-6 rounded-xl border bg-card p-4"
+          >
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Scanned Items
+            </h3>
+            <div className="space-y-1.5">
+              {items.map((item) => (
+                <div key={item.id} className="flex justify-between text-sm">
+                  <span className={item.isExtra ? "italic text-muted-foreground" : "text-foreground"}>
+                    {item.name}
+                    {item.quantity > 1 && ` ×${item.quantity}`}
+                  </span>
+                  <span className="font-medium">
+                    {currency}{(item.price * item.quantity).toFixed(2)}
+                  </span>
+                </div>
+              ))}
+              <div className="border-t pt-2 mt-2 flex justify-between font-bold text-sm">
+                <span>Total</span>
+                <span>
+                  {currency}
+                  {items.reduce((s, i) => s + i.price * i.quantity, 0).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );
