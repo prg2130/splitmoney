@@ -15,6 +15,12 @@ const ResultsView = ({ results, currency, billTotal, onReset }: ResultsViewProps
   const { toast } = useToast();
   const splitTotal = results.reduce((s, r) => s + r.total, 0);
   const grandTotal = billTotal ?? splitTotal;
+  // Scale each person's total so splits add up to the actual bill total
+  const scaleFactor = splitTotal > 0 ? grandTotal / splitTotal : 1;
+  const adjustedResults = results.map((r) => ({
+    ...r,
+    total: Math.round(r.total * scaleFactor * 100) / 100,
+  }));
 
   const handleShare = () => {
     const text = results
