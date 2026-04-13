@@ -7,12 +7,14 @@ import { useToast } from "@/hooks/use-toast";
 interface ResultsViewProps {
   results: PersonTotal[];
   currency: string;
+  billTotal: number | null;
   onReset: () => void;
 }
 
-const ResultsView = ({ results, currency, onReset }: ResultsViewProps) => {
+const ResultsView = ({ results, currency, billTotal, onReset }: ResultsViewProps) => {
   const { toast } = useToast();
-  const grandTotal = results.reduce((s, r) => s + r.total, 0);
+  const splitTotal = results.reduce((s, r) => s + r.total, 0);
+  const grandTotal = billTotal ?? splitTotal;
 
   const handleShare = () => {
     const text = results
