@@ -38,9 +38,10 @@ serve(async (req) => {
           {
             role: "system",
             content: `You are a restaurant bill parser. Extract all line items from the bill image.
-For each item, extract the name and total price.
-Also extract any tax, service charge, or tip if present as separate items.
-Use the tool provided to return structured data.`,
+For each item, extract the name and total price (per unit, NOT multiplied by quantity).
+Also extract any tax, service charge, or tip if present as separate items marked as isExtra.
+Extract the grand/payment total exactly as printed on the bill.
+Output raw numbers without thousands separators. Use the tool provided.`,
           },
           {
             role: "user",
@@ -86,6 +87,7 @@ Use the tool provided to return structured data.`,
                     },
                   },
                   currency: { type: "string", description: "Currency symbol used in the bill" },
+                  billTotal: { type: "number", description: "The grand total / payment total as printed on the bill" },
                   restaurantName: { type: "string", description: "Restaurant name if visible" },
                 },
                 required: ["items"],
