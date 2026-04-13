@@ -23,7 +23,7 @@ const ResultsView = ({ results, currency, billTotal, onReset }: ResultsViewProps
   }));
 
   const handleShare = () => {
-    const text = results
+    const text = adjustedResults
       .map((r) => `${r.person.name}: ${currency}${r.total.toFixed(2)}`)
       .join("\n");
     const full = `🧾 Bill Split\n\n${text}\n\nTotal: ${currency}${grandTotal.toFixed(2)}`;
