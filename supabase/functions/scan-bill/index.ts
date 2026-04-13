@@ -122,7 +122,21 @@ Use the tool provided to return structured data.`,
       throw new Error("No structured data returned from AI");
     }
 
-    const parsed = JSON.parse(toolCall.function.arguments);
+    // Sanitize locale-specific number formatting and parse
+    const rawArgs = toolCall.function.arguments
+      .replace(/(\d)\s(\d)/g, "$1$2"); // remove space-separated thousands
+    const parsed = JSON.parse(rawArgs);
+
+    // Ensure all items have valid numeric prices and quantities
+    if (parsed.items) {
+      parsed.items = parsed.items
+        .filter((item: any) => item.name && typeof item.price === "number" && item.price > 0)
+        .map((item: any) => ({
+          ...item,
+          price: Math.round(item.price * 100) / 100,
+          quantity: Math.max(1, Math.round(item.quantity || 1)),
+        }));
+    }
 
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
