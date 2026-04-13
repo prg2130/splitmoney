@@ -39,7 +39,7 @@ export function getColor(index: number): string {
 export function calculateSplit(items: BillItem[], people: Person[]): PersonTotal[] {
   const foodItems = items.filter((i) => !i.isExtra);
   const extraItems = items.filter((i) => i.isExtra);
-  const totalExtras = extraItems.reduce((s, i) => s + i.price, 0);
+  const totalExtras = extraItems.reduce((s, i) => s + i.price * i.quantity, 0);
   const totalFood = foodItems.reduce((s, i) => s + i.price * i.quantity, 0);
 
   const result: PersonTotal[] = people.map((person) => {
