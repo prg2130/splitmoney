@@ -159,7 +159,9 @@ const Index = () => {
                 <span>Total</span>
                 <span>
                   {currency}
-                  {items.reduce((s, i) => s + i.price * i.quantity, 0).toFixed(2)}
+                  {billTotal
+                    ? billTotal.toFixed(2)
+                    : items.reduce((s, i) => s + i.price * i.quantity, 0).toFixed(2)}
                 </span>
               </div>
             </div>
