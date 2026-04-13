@@ -1,4 +1,4 @@
-import { PersonTotal } from "@/lib/splitbill";
+import { PersonTotal, ExtraSplitMethod } from "@/lib/splitbill";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, Share2 } from "lucide-react";
@@ -8,10 +8,11 @@ interface ResultsViewProps {
   results: PersonTotal[];
   currency: string;
   billTotal: number | null;
+  extraSplitMethod: ExtraSplitMethod;
   onReset: () => void;
 }
 
-const ResultsView = ({ results, currency, billTotal, onReset }: ResultsViewProps) => {
+const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }: ResultsViewProps) => {
   const { toast } = useToast();
   const splitTotal = results.reduce((s, r) => s + r.total, 0);
   const grandTotal = billTotal ?? splitTotal;
@@ -44,7 +45,9 @@ const ResultsView = ({ results, currency, billTotal, onReset }: ResultsViewProps
     >
       <div className="text-center space-y-2">
         <h2 className="text-xl font-bold text-foreground">Each Person Owes</h2>
-        <p className="text-sm text-muted-foreground">Including proportional tax & charges</p>
+        <p className="text-sm text-muted-foreground">
+          Tax & charges split {extraSplitMethod === "equal" ? "equally" : "by order cost"}
+        </p>
       </div>
 
       <div className="space-y-3">
