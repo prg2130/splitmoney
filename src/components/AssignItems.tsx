@@ -161,6 +161,47 @@ const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currenc
         </Button>
       </div>
 
+      {/* Tax/charges split method - show on last item */}
+      {currentIndex === foodItems.length - 1 && hasExtras && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border bg-card p-4 space-y-2"
+        >
+          <p className="text-sm font-semibold text-foreground">How to split taxes & charges?</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => onExtraSplitMethodChange("proportional")}
+              className={`flex items-center gap-2 rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all ${
+                extraSplitMethod === "proportional"
+                  ? "border-primary bg-accent text-accent-foreground"
+                  : "border-border bg-card text-foreground hover:border-primary/30"
+              }`}
+            >
+              <Percent className="h-4 w-4 shrink-0" />
+              <div className="text-left">
+                <p className="font-medium">By order</p>
+                <p className="text-xs text-muted-foreground">Based on what you ate</p>
+              </div>
+            </button>
+            <button
+              onClick={() => onExtraSplitMethodChange("equal")}
+              className={`flex items-center gap-2 rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all ${
+                extraSplitMethod === "equal"
+                  ? "border-primary bg-accent text-accent-foreground"
+                  : "border-border bg-card text-foreground hover:border-primary/30"
+              }`}
+            >
+              <Equal className="h-4 w-4 shrink-0" />
+              <div className="text-left">
+                <p className="font-medium">Equally</p>
+                <p className="text-xs text-muted-foreground">Same for everyone</p>
+              </div>
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       {/* Quick overview dots */}
       <div className="flex justify-center gap-1 flex-wrap">
         {foodItems.map((item, i) => (
