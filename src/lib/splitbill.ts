@@ -1,22 +1,24 @@
+export interface BillItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  isExtra: boolean; // tax, tip, service charge
+  assignedTo: string[]; // person IDs who share this item
+}
+
 export interface Person {
   id: string;
   name: string;
   color: string;
 }
 
-export interface Expense {
-  id: string;
-  description: string;
-  amount: number;
-  paidById: string;
-  splitAmong: string[]; // person IDs
-  date: string;
-}
-
-export interface Balance {
-  from: string;
-  to: string;
-  amount: number;
+export interface PersonTotal {
+  person: Person;
+  items: { name: string; share: number }[];
+  subtotal: number;
+  extrasShare: number;
+  total: number;
 }
 
 const COLORS = [
@@ -26,49 +28,43 @@ const COLORS = [
   "hsl(350, 65%, 55%)",
   "hsl(200, 70%, 50%)",
   "hsl(100, 50%, 45%)",
+  "hsl(20, 80%, 55%)",
+  "hsl(310, 60%, 50%)",
 ];
 
 export function getColor(index: number): string {
   return COLORS[index % COLORS.length];
 }
 
-export function calculateBalances(people: Person[], expenses: Expense[]): Balance[] {
-  const netBalances: Record<string, number> = {};
-  people.forEach((p) => (netBalances[p.id] = 0));
+export function calculateSplit(items: BillItem[], people: Person[]): PersonTotal[] {
+  const foodItems = items.filter((i) => !i.isExtra);
+  const extraItems = items.filter((i) => i.isExtra);
+  const totalExtras = extraItems.reduce((s, i) => s + i.price, 0);
+  const totalFood = foodItems.reduce((s, i) => s + i.price * i.quantity, 0);
 
-  expenses.forEach((expense) => {
-    const splitCount = expense.splitAmong.length;
-    if (splitCount === 0) return;
-    const share = expense.amount / splitCount;
-    netBalances[expense.paidById] += expense.amount;
-    expense.splitAmong.forEach((id) => {
-      netBalances[id] -= share;
+  const result: PersonTotal[] = people.map((person) => {
+    const personItems: { name: string; share: number }[] = [];
+    let subtotal = 0;
+
+    foodItems.forEach((item) => {
+      if (item.assignedTo.includes(person.id)) {
+        const share = (item.price * item.quantity) / item.assignedTo.length;
+        personItems.push({ name: item.name, share });
+        subtotal += share;
+      }
     });
+
+    // Proportional share of extras (tax/tip/service)
+    const extrasShare = totalFood > 0 ? (subtotal / totalFood) * totalExtras : 0;
+
+    return {
+      person,
+      items: personItems,
+      subtotal: Math.round(subtotal * 100) / 100,
+      extrasShare: Math.round(extrasShare * 100) / 100,
+      total: Math.round((subtotal + extrasShare) * 100) / 100,
+    };
   });
-
-  const debtors: { id: string; amount: number }[] = [];
-  const creditors: { id: string; amount: number }[] = [];
-
-  Object.entries(netBalances).forEach(([id, amount]) => {
-    if (amount < -0.01) debtors.push({ id, amount: -amount });
-    else if (amount > 0.01) creditors.push({ id, amount });
-  });
-
-  debtors.sort((a, b) => b.amount - a.amount);
-  creditors.sort((a, b) => b.amount - a.amount);
-
-  const result: Balance[] = [];
-  let i = 0, j = 0;
-  while (i < debtors.length && j < creditors.length) {
-    const transfer = Math.min(debtors[i].amount, creditors[j].amount);
-    if (transfer > 0.01) {
-      result.push({ from: debtors[i].id, to: creditors[j].id, amount: Math.round(transfer * 100) / 100 });
-    }
-    debtors[i].amount -= transfer;
-    creditors[j].amount -= transfer;
-    if (debtors[i].amount < 0.01) i++;
-    if (creditors[j].amount < 0.01) j++;
-  }
 
   return result;
 }
