@@ -247,6 +247,10 @@ Output raw numbers without thousands separators. Use the tool provided.`,
         }));
     }
 
+
+    // Log successful scan for rate limiting
+    await adminClient.from("scan_logs").insert({ user_id: userId });
+
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
