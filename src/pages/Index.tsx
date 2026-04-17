@@ -24,6 +24,13 @@ const Index = () => {
   const handleImageCaptured = async (base64: string) => {
     setIsScanning(true);
     try {
+      // Ensure we have a session (anonymous is fine) so the edge function accepts the call
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        const { error: anonError } = await supabase.auth.signInAnonymously();
+        if (anonError) throw anonError;
+      }
+
       const { data, error } = await supabase.functions.invoke("scan-bill", {
         body: { imageBase64: base64 },
       });
