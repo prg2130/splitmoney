@@ -37,6 +37,34 @@ serve(async (req) => {
       );
     }
 
+    const userId = claimsData.claims.sub as string;
+
+    // Rate limit: max 10 scans per hour per user
+    const RATE_LIMIT = 10;
+    const WINDOW_MS = 60 * 60 * 1000;
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const sinceIso = new Date(Date.now() - WINDOW_MS).toISOString();
+    const { count: recentCount, error: countError } = await adminClient
+      .from("scan_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", sinceIso);
+
+    if (countError) {
+      console.error("Rate limit count error:", countError);
+    } else if ((recentCount ?? 0) >= RATE_LIMIT) {
+      return new Response(
+        JSON.stringify({
+          error: `Rate limit exceeded: max ${RATE_LIMIT} scans per hour. Please try again later.`,
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { imageBase64 } = await req.json();
 
     if (!imageBase64) {
@@ -218,6 +246,10 @@ Output raw numbers without thousands separators. Use the tool provided.`,
           quantity: Math.max(1, Math.round(item.quantity || 1)),
         }));
     }
+
+
+    // Log successful scan for rate limiting
+    await adminClient.from("scan_logs").insert({ user_id: userId });
 
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
