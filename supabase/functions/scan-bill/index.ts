@@ -75,7 +75,7 @@ serve(async (req) => {
     }
 
     // Validate MIME type (only allow jpeg, png, webp)
-    const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
     let mimeType: string | null = null;
     let base64Payload = imageBase64;
 
