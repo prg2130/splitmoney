@@ -12,14 +12,30 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
+    let processed: Blob = file;
+    const isHeic =
+      /\.(heic|heif)$/i.test(file.name) ||
+      file.type === "image/heic" ||
+      file.type === "image/heif";
+
+    if (isHeic) {
+      try {
+        const heic2any = (await import("heic2any")).default;
+        const result = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+        processed = Array.isArray(result) ? result[0] : result;
+      } catch (err) {
+        console.error("HEIC conversion failed:", err);
+      }
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64 = e.target?.result as string;
       setPreview(base64);
       onImageCaptured(base64);
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(processed);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
