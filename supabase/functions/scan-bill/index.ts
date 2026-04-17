@@ -46,6 +46,53 @@ serve(async (req) => {
       );
     }
 
+    // Validate MIME type (only allow jpeg, png, webp)
+    const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    let mimeType: string | null = null;
+    let base64Payload = imageBase64;
+
+    if (typeof imageBase64 !== "string") {
+      return new Response(
+        JSON.stringify({ error: "Invalid image payload" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (imageBase64.startsWith("data:")) {
+      const match = imageBase64.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) {
+        return new Response(
+          JSON.stringify({ error: "Invalid data URL format" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      mimeType = match[1].toLowerCase();
+      base64Payload = match[2];
+    } else {
+      // Raw base64 — assume jpeg (matches downstream default)
+      mimeType = "image/jpeg";
+    }
+
+    if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
+      return new Response(
+        JSON.stringify({ error: `Unsupported media type: ${mimeType}. Allowed: ${ALLOWED_MIME_TYPES.join(", ")}` }),
+        { status: 415, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate file size (max 5MB decoded)
+    const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+    // base64 length * 3/4 ≈ decoded byte size (minus padding)
+    const padding = (base64Payload.match(/=+$/) || [""])[0].length;
+    const decodedSize = Math.floor((base64Payload.length * 3) / 4) - padding;
+
+    if (decodedSize > MAX_SIZE_BYTES) {
+      return new Response(
+        JSON.stringify({ error: `File too large: ${(decodedSize / 1024 / 1024).toFixed(2)}MB. Maximum: 5MB` }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
