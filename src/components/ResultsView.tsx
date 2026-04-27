@@ -62,19 +62,19 @@ const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.08 }}
-            className="rounded-xl border bg-card overflow-hidden"
+            className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur overflow-hidden shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3">
                 <span
-                  className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold text-primary-foreground"
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold text-primary-foreground shadow-md"
                   style={{ backgroundColor: r.person.color }}
                 >
                   {r.person.name.charAt(0)}
                 </span>
                 <span className="font-semibold text-foreground">{r.person.name}</span>
               </div>
-              <span className="text-xl font-bold text-primary">
+              <span className="text-xl font-extrabold gradient-text tabular">
                 {currency}{r.total.toFixed(2)}
               </span>
             </div>
@@ -82,13 +82,13 @@ const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }
             {/* Breakdown */}
             <div className="px-4 pb-3 space-y-1">
               {r.items.map((item, j) => (
-                <div key={j} className="flex justify-between text-xs text-muted-foreground">
+                <div key={j} className="flex justify-between text-xs text-muted-foreground tabular">
                   <span>{item.name}</span>
                   <span>{currency}{item.share.toFixed(2)}</span>
                 </div>
               ))}
               {r.extrasShare > 0 && (
-                <div className="flex justify-between text-xs text-muted-foreground italic border-t border-border pt-1 mt-1">
+                <div className="flex justify-between text-xs text-muted-foreground italic border-t border-border pt-1 mt-1 tabular">
                   <span>Tax & charges</span>
                   <span>{currency}{r.extrasShare.toFixed(2)}</span>
                 </div>
@@ -99,9 +99,10 @@ const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }
       </div>
 
       {/* Grand total */}
-      <div className="rounded-xl bg-primary px-5 py-4 text-primary-foreground text-center">
-        <p className="text-sm opacity-80">Grand Total</p>
-        <p className="text-3xl font-bold">{currency}{grandTotal.toFixed(2)}</p>
+      <div className="relative overflow-hidden rounded-2xl gradient-primary px-5 py-5 text-primary-foreground text-center shadow-glow">
+        <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+        <p className="relative text-xs uppercase tracking-[0.2em] opacity-80">Grand Total</p>
+        <p className="relative text-4xl font-extrabold tabular mt-1">{currency}{grandTotal.toFixed(2)}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -109,7 +110,7 @@ const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }
           <RotateCcw className="h-4 w-4" />
           New Bill
         </Button>
-        <Button onClick={handleShare} className="gap-2">
+        <Button variant="gradient" onClick={handleShare} className="gap-2">
           <Share2 className="h-4 w-4" />
           Share
         </Button>
