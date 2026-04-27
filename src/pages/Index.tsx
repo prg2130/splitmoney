@@ -8,6 +8,7 @@ import BillUpload from "@/components/BillUpload";
 import AddPeople from "@/components/AddPeople";
 import AssignItems from "@/components/AssignItems";
 import ResultsView from "@/components/ResultsView";
+import StepProgress from "@/components/StepProgress";
 
 type Step = "upload" | "people" | "assign" | "results";
 
@@ -79,39 +80,58 @@ const Index = () => {
 
   const results = step === "results" ? calculateSplit(items, people, extraSplitMethod) : [];
 
+  const stepOrder: Step[] = ["upload", "people", "assign", "results"];
+  const currentIndex = stepOrder.indexOf(step);
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-lg px-4 py-8 sm:py-12">
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      {/* Ambient blurred blobs */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-32 -left-24 h-80 w-80 rounded-full bg-primary/20 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-40 -right-24 h-96 w-96 rounded-full bg-success/20 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-accent/40 blur-3xl"
+      />
+
+      <div className="relative mx-auto max-w-lg px-4 py-8 sm:py-12">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 text-center"
         >
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
-            <Receipt className="h-7 w-7 text-primary-foreground" />
+          <motion.div
+            whileHover={{ rotate: -6, scale: 1.05 }}
+            className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl gradient-primary shadow-glow"
+          >
+            <Receipt className="h-8 w-8 text-primary-foreground" />
+          </motion.div>
+          <h1 className="text-3xl font-extrabold tracking-tight gradient-text">SplitBill</h1>
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground backdrop-blur">
+            Scan · Assign · Split
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">SplitBill</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Scan · Assign · Split</p>
         </motion.div>
 
         {/* Steps indicator */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          {(["upload", "people", "assign", "results"] as Step[]).map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
-              <div
-                className={`h-2.5 w-2.5 rounded-full transition-colors ${
-                  s === step
-                    ? "bg-primary scale-125"
-                    : (["upload", "people", "assign", "results"].indexOf(step) > i)
-                    ? "bg-success"
-                    : "bg-muted-foreground/30"
-                }`}
-              />
-              {i < 3 && <div className="w-8 h-px bg-border" />}
-            </div>
-          ))}
+        <div className="mb-8">
+          <StepProgress
+            steps={[
+              { key: "upload", label: "Scan" },
+              { key: "people", label: "People" },
+              { key: "assign", label: "Assign" },
+              { key: "results", label: "Split" },
+            ]}
+            currentIndex={currentIndex}
+          />
         </div>
+
+        <div className="glass-card p-5 sm:p-6">
 
         {/* Step content */}
         {step === "upload" && (
@@ -142,30 +162,37 @@ const Index = () => {
         {step === "results" && (
           <ResultsView results={results} currency={currency} billTotal={billTotal} extraSplitMethod={extraSplitMethod} onReset={handleReset} />
         )}
+        </div>
 
         {/* Scanned items preview (during people step) */}
         {step === "people" && items.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-6 rounded-xl border bg-card p-4"
+            className="mt-6 glass-card p-4"
           >
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Scanned Items
             </h3>
             <div className="space-y-1.5">
-              {items.map((item) => (
-                <div key={item.id} className="flex justify-between text-sm">
+              {items.map((item, i) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                  className="flex justify-between text-sm"
+                >
                   <span className={item.isExtra ? "italic text-muted-foreground" : "text-foreground"}>
                     {item.name}
                     {item.quantity > 1 && ` ×${item.quantity}`}
                   </span>
-                  <span className="font-medium">
+                  <span className="font-medium tabular">
                     {currency}{(item.price * item.quantity).toFixed(2)}
                   </span>
-                </div>
+                </motion.div>
               ))}
-              <div className="border-t pt-2 mt-2 flex justify-between font-bold text-sm">
+              <div className="border-t pt-2 mt-2 flex justify-between font-bold text-sm tabular">
                 <span>Total</span>
                 <span>
                   {currency}

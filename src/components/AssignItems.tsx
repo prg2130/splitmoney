@@ -83,14 +83,14 @@ const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currenc
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}
-          className="rounded-xl border-2 border-primary/20 bg-card p-5 text-center"
+          className="rounded-2xl border-2 border-primary/20 bg-card/80 backdrop-blur p-5 text-center shadow-md"
         >
           <p className="text-lg font-bold text-foreground">{currentItem.name}</p>
-          <p className="text-2xl font-bold text-primary mt-1">
+          <p className="text-3xl font-extrabold gradient-text mt-1 tabular">
             {currency}{(currentItem.price * currentItem.quantity).toFixed(2)}
           </p>
           {currentItem.quantity > 1 && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1 tabular">
               {currentItem.quantity} × {currency}{currentItem.price.toFixed(2)}
             </p>
           )}
@@ -147,6 +147,7 @@ const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currenc
           Back
         </Button>
         <Button
+          variant="gradient"
           onClick={() => {
             if (currentIndex < foodItems.length - 1) {
               setCurrentIndex(currentIndex + 1);

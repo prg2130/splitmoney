@@ -76,6 +76,7 @@ const AddPeople = ({ people, onPeopleChange, onContinue }: AddPeopleProps) => {
       )}
 
       <Button
+        variant="gradient"
         onClick={onContinue}
         disabled={people.length < 2}
         className="w-full gap-2"
