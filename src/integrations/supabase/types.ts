@@ -18,19 +18,28 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_path: string | null
           ip: string | null
+          mime_type: string | null
+          size_bytes: number | null
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          image_path?: string | null
           ip?: string | null
+          mime_type?: string | null
+          size_bytes?: number | null
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          image_path?: string | null
           ip?: string | null
+          mime_type?: string | null
+          size_bytes?: number | null
           user_id?: string
         }
         Relationships: []
