@@ -108,6 +108,25 @@ serve(async (req) => {
       }
     }
 
+    // Global daily cap: max 200 scans across all users in rolling 24h
+    const GLOBAL_DAILY_LIMIT = 200;
+    const dailySinceIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count: globalCount, error: globalCountError } = await adminClient
+      .from("scan_logs")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", dailySinceIso);
+
+    if (globalCountError) {
+      console.error("Global daily cap count error:", globalCountError);
+    } else if ((globalCount ?? 0) >= GLOBAL_DAILY_LIMIT) {
+      return new Response(
+        JSON.stringify({
+          error: "Daily scan limit reached. Please try again tomorrow.",
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { imageBase64 } = await req.json();
 
     if (!imageBase64) {

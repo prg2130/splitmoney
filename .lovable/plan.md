@@ -1,64 +1,36 @@
-# Stylish Visual Refresh
+# Global Daily Scan Cap (200/day)
 
-Goal: make SplitBill look like a premium, modern product — keep the teal/sand palette and all existing functionality intact. No flow changes, just visual polish.
+Add a third rate-limit layer to `supabase/functions/scan-bill/index.ts` that caps **total scans across all users and IPs combined** at **200 per rolling 24 hours**. Acts as a hard fuse on AI spend regardless of how attackers rotate accounts or IPs.
 
-## What changes (user-facing)
+## Changes
 
-1. **Background** — replace flat sand with a soft ambient gradient (warm sand → faint mint), plus two large blurred color "blobs" behind content for depth. Subtle, not loud.
+**File: `supabase/functions/scan-bill/index.ts`**
 
-2. **Header**
-   - Logo tile gets a teal→emerald gradient with a soft glow shadow.
-   - "SplitBill" wordmark uses a gradient text fill.
-   - Tagline gets a small pill-style "Scan · Assign · Split" chip instead of plain text.
+Add a new check right after the existing per-IP rate-limit block, before reading the request body or calling the AI:
 
-3. **Step indicator** — upgrade from dots to a connected progress track:
-   - Completed steps: filled teal circle with check icon.
-   - Current step: larger ring with pulsing glow.
-   - Connector lines fill in as you progress.
+1. Define `GLOBAL_DAILY_LIMIT = 200`.
+2. Query `scan_logs` for total rows where `created_at >= now() - 24h` (no user/IP filter).
+3. If count ≥ 200, return `429` with message: *"Daily scan limit reached. Please try again tomorrow."*
+4. Otherwise proceed as normal.
 
-4. **Cards & surfaces**
-   - All cards get: rounded-2xl, subtle border, layered shadow, and a faint backdrop-blur (glass effect) over the gradient bg.
-   - Hover lift on interactive cards.
+The check runs **before** the AI gateway call, so a tripped cap costs zero AI credits — only one cheap indexed count query.
 
-5. **Upload screen**
-   - Dashed upload zone becomes a larger, friendlier panel with an animated icon (gentle float) and a gradient hover state.
-   - Upload/Camera buttons: primary gets gradient + soft shadow; outline gets refined hover.
-   - Scanning overlay: replace plain spinner with a moving scan-line across the bill + a small pill ("Reading your bill…") — feels intentional, not generic.
+## Why a rolling 24h window
 
-6. **Buttons globally**
-   - Primary: gradient (teal → emerald), soft elevation, slight scale on press.
-   - Add a `gradient` variant to the Button component so it's reusable.
+Smoother than a midnight reset: an attacker can't burn 200 scans at 23:59 and another 200 at 00:01. The window slides continuously.
 
-7. **Typography**
-   - Tighten tracking on headings, increase weight to 700/800 for h1.
-   - Numbers (totals, prices) use tabular-nums so they align cleanly.
+## What stays the same
 
-8. **Micro-interactions**
-   - Fade+slide-in on step transitions (already partly there, made consistent).
-   - Items in the scanned-items list stagger in.
-   - Success states (checkmarks, completed steps) get a quick scale-in pop.
+- Per-user cap: 10/hr
+- Per-IP cap: 5/hr
+- 5MB / MIME validation
+- Storage logging to `bill-uploads`
 
-## Technical details
+## Tradeoffs to accept
 
-- **`src/index.css`**: add gradient bg utility, glass card utility, scan-line keyframes, float keyframe, gradient-text utility. Keep all colors as HSL tokens — no hardcoded hex.
-- **`tailwind.config.ts`**: register new keyframes (`scan-line`, `float`, `pulse-glow`) and animations.
-- **`src/components/ui/button.tsx`**: add `gradient` variant using `bg-gradient-to-r from-primary to-success`.
-- **`src/pages/Index.tsx`**: 
-  - Wrap page in gradient bg + decorative blurred blobs (absolute, pointer-events-none).
-  - Replace dot step indicator with new connected progress component (inline or small new file `src/components/StepProgress.tsx`).
-  - Header logo → gradient tile, wordmark → gradient text, tagline → pill chip.
-  - Scanned-items card → glass styling, stagger animation via framer-motion.
-- **`src/components/BillUpload.tsx`**:
-  - Larger upload dropzone with floating icon, gradient hover.
-  - Gradient primary "Camera" button.
-  - New scan overlay: scan-line animation + status pill.
-- **`src/components/AddPeople.tsx`, `AssignItems.tsx`, `ResultsView.tsx`**: apply glass card styling, gradient primary buttons, tabular-nums on price numbers. No structural changes.
+- If 200 legit scans happen in 24h, further users see the "try tomorrow" message until the window slides. Easy to raise later by editing one constant.
+- No alerting — you'd notice via `scan_logs` row count or the user-facing message. Can add later if needed.
 
-## Out of scope
-- No changes to scanning logic, splitting math, edge function, or the 4-step flow.
-- No new pages or features (Splitwise export, payment links, etc. — separate task).
-- No dark mode work (current app is light-only).
+## Note
 
-## Risks
-- Glass/backdrop-blur can dim text contrast — will verify all text stays AA contrast on the gradient bg.
-- Keep animations short (≤300ms) so the app still feels snappy on mobile.
+The backend doesn't yet have first-class rate-limiting primitives, so this is an ad-hoc DB-counted check (same pattern as your existing per-user/per-IP limits). Good enough for a cost fuse on a personal project.
