@@ -292,9 +292,40 @@ Output raw numbers without thousands separators. Use the tool provided.`,
 
 
     // Log successful scan for rate limiting (user + IP)
+    // Upload the received image to private storage for record-keeping
+    let storedPath: string | null = null;
+    try {
+      const ext =
+        mimeType === "image/png" ? "png" :
+        mimeType === "image/webp" ? "webp" :
+        mimeType === "image/heic" ? "heic" :
+        mimeType === "image/heif" ? "heif" : "jpg";
+      // Decode base64 to bytes
+      const binary = Uint8Array.from(atob(base64Payload), (c) => c.charCodeAt(0));
+      const now = new Date();
+      const datePrefix = now.toISOString().slice(0, 10); // YYYY-MM-DD
+      const objectPath = `${datePrefix}/${userId}/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await adminClient.storage
+        .from("bill-uploads")
+        .upload(objectPath, binary, { contentType: mimeType, upsert: false });
+      if (uploadError) {
+        console.error("bill-uploads upload failed:", uploadError);
+      } else {
+        storedPath = objectPath;
+      }
+    } catch (uploadErr) {
+      console.error("bill-uploads upload threw:", uploadErr);
+    }
+
     const { error: logError } = await adminClient
       .from("scan_logs")
-      .insert({ user_id: userId, ip: ip === "unknown" ? null : ip });
+      .insert({
+        user_id: userId,
+        ip: ip === "unknown" ? null : ip,
+        image_path: storedPath,
+        mime_type: mimeType,
+        size_bytes: decodedSize,
+      });
     if (logError) {
       console.error("scan_logs insert failed:", logError);
     }
