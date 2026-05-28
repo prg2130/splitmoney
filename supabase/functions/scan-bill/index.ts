@@ -1,16 +1,39 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const ALLOWED_ORIGINS = new Set([
+  "https://splitmoney.lovable.app",
+  "https://id-preview--c7b39863-0b6c-400b-a35e-bcde32282d6a.lovable.app",
+  "http://localhost:5173",
+  "http://localhost:8080",
+]);
+
+function buildCorsHeaders(origin: string | null): Record<string, string> {
+  const allowOrigin =
+    origin && (ALLOWED_ORIGINS.has(origin) || origin.endsWith(".lovable.app"))
+      ? origin
+      : "https://splitmoney.lovable.app";
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
 
 serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req.headers.get("origin"));
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Best-effort client IP from common proxy headers
+  const ip =
+    (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() ||
+    req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
 
   try {
     // Require a valid Supabase user JWT
@@ -39,8 +62,9 @@ serve(async (req) => {
 
     const userId = userData.user.id;
 
-    // Rate limit: max 10 scans per hour per user
+    // Rate limit: max 10 scans per hour per user AND max 15 per hour per IP
     const RATE_LIMIT = 10;
+    const IP_RATE_LIMIT = 15;
     const WINDOW_MS = 60 * 60 * 1000;
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -63,6 +87,25 @@ serve(async (req) => {
         }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    if (ip && ip !== "unknown") {
+      const { count: ipCount, error: ipCountError } = await adminClient
+        .from("scan_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("ip", ip)
+        .gte("created_at", sinceIso);
+
+      if (ipCountError) {
+        console.error("IP rate limit count error:", ipCountError);
+      } else if ((ipCount ?? 0) >= IP_RATE_LIMIT) {
+        return new Response(
+          JSON.stringify({
+            error: `Too many scans from your network. Please try again later.`,
+          }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     const { imageBase64 } = await req.json();
@@ -248,8 +291,13 @@ Output raw numbers without thousands separators. Use the tool provided.`,
     }
 
 
-    // Log successful scan for rate limiting
-    await adminClient.from("scan_logs").insert({ user_id: userId });
+    // Log successful scan for rate limiting (user + IP)
+    const { error: logError } = await adminClient
+      .from("scan_logs")
+      .insert({ user_id: userId, ip: ip === "unknown" ? null : ip });
+    if (logError) {
+      console.error("scan_logs insert failed:", logError);
+    }
 
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
