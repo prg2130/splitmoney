@@ -64,7 +64,7 @@ serve(async (req) => {
 
     // Rate limit: max 10 scans per hour per user AND max 15 per hour per IP
     const RATE_LIMIT = 10;
-    const IP_RATE_LIMIT = 15;
+    const IP_RATE_LIMIT = 5;
     const WINDOW_MS = 60 * 60 * 1000;
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
