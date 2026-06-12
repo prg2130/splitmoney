@@ -4,13 +4,18 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const ALLOWED_ORIGINS = new Set([
   "https://splitmoney.lovable.app",
   "https://id-preview--c7b39863-0b6c-400b-a35e-bcde32282d6a.lovable.app",
+  "https://www.payurshare.com",
+  "https://payurshare.com",
   "http://localhost:5173",
   "http://localhost:8080",
 ]);
 
 function buildCorsHeaders(origin: string | null): Record<string, string> {
   const allowOrigin =
-    origin && (ALLOWED_ORIGINS.has(origin) || origin.endsWith(".lovable.app"))
+    origin &&
+    (ALLOWED_ORIGINS.has(origin) ||
+      origin.endsWith(".lovable.app") ||
+      origin.endsWith(".payurshare.com"))
       ? origin
       : "https://splitmoney.lovable.app";
   return {
