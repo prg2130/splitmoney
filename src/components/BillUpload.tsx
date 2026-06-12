@@ -19,7 +19,9 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
       file.type === "image/heic" ||
       file.type === "image/heif";
 
+    const MAX_BYTES = 5 * 1024 * 1024;
     let processed: Blob | null = null;
+    let rawHeicFallback = false;
 
     // 1) Try native browser decode (Safari handles HEIC natively).
     //    This also downscales large photos so we stay under the edge function payload cap.
@@ -34,15 +36,21 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
           const jpegBlob = (Array.isArray(converted) ? converted[0] : converted) as Blob;
           processed = await downscaleToJpeg(jpegBlob, 1600, 0.85);
         } catch (heicErr) {
-          console.error("HEIC conversion failed:", heicErr);
-          toast({
-            title: "Couldn't read this HEIC photo",
-            description:
-              "This image uses an iPhone HDR/HEIC variant the browser can't decode. Tip: on iPhone, Settings → Camera → Formats → 'Most Compatible', or re-save the photo as JPG.",
-            variant: "destructive",
-          });
-          if (fileInputRef.current) fileInputRef.current.value = "";
-          return;
+          console.error("HEIC conversion failed, falling back to server-side decode:", heicErr);
+          // 3) Last resort: send the raw HEIC to the AI (it decodes HEIC natively),
+          //    as long as it fits under the upload cap.
+          if (file.size <= MAX_BYTES) {
+            processed = file;
+            rawHeicFallback = true;
+          } else {
+            toast({
+              title: "HEIC photo too large",
+              description: `This photo is ${(file.size / 1024 / 1024).toFixed(1)} MB and the browser can't compress it. Tip: on iPhone, Settings → Camera → Formats → 'Most Compatible', or re-save it as JPG.`,
+              variant: "destructive",
+            });
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+          }
         }
       } else {
         console.error("Image decode failed:", err);
@@ -59,7 +67,6 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
     if (!processed) return;
 
     // Safety cap (downscale should keep us well under this).
-    const MAX_BYTES = 5 * 1024 * 1024;
     if (processed.size > MAX_BYTES) {
       toast({
         title: "Image too large",
@@ -72,8 +79,15 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const base64 = e.target?.result as string;
-      setPreview(base64);
+      let base64 = e.target?.result as string;
+      if (rawHeicFallback) {
+        // Force the correct mime type (browsers often report octet-stream for HEIC)
+        base64 = base64.replace(/^data:[^;]*;base64,/, "data:image/heic;base64,");
+        // Browser can't render HEIC — show a neutral placeholder instead of a broken image
+        setPreview("heic");
+      } else {
+        setPreview(base64);
+      }
       onImageCaptured(base64);
     };
     reader.readAsDataURL(processed);
@@ -144,7 +158,14 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
 
       {preview ? (
         <div className="relative rounded-2xl overflow-hidden border-2 border-primary/20 shadow-lg">
-          <img src={preview} alt="Bill preview" className="w-full max-h-80 object-contain bg-muted/30" />
+          {preview === "heic" ? (
+            <div className="flex h-48 w-full flex-col items-center justify-center gap-2 bg-muted/30">
+              <Camera className="h-8 w-8 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">HEIC photo ready (preview not supported)</p>
+            </div>
+          ) : (
+            <img src={preview} alt="Bill preview" className="w-full max-h-80 object-contain bg-muted/30" />
+          )}
           {isScanning && (
             <>
               <div className="absolute inset-0 bg-foreground/30 backdrop-blur-[2px]" />
