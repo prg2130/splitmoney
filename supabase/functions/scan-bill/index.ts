@@ -42,6 +42,10 @@ serve(async (req) => {
     req.headers.get("x-real-ip") ||
     "unknown";
 
+  console.log(
+    `[scan-bill] ${req.method} from ip=${ip} origin=${req.headers.get("origin")} content-length=${req.headers.get("content-length")}`
+  );
+
   try {
     // Require a valid Supabase user JWT
     const authHeader = req.headers.get("Authorization");
@@ -68,10 +72,11 @@ serve(async (req) => {
     }
 
     const userId = userData.user.id;
+    console.log(`[scan-bill] auth ok user=${userId}`);
 
     // Rate limit: max 10 scans per hour per user AND max 15 per hour per IP
     const RATE_LIMIT = 10;
-    const IP_RATE_LIMIT = 5;
+    const IP_RATE_LIMIT = 15;
     const WINDOW_MS = 60 * 60 * 1000;
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
