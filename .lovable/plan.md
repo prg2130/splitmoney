@@ -1,36 +1,28 @@
-# Global Daily Scan Cap (200/day)
 
-Add a third rate-limit layer to `supabase/functions/scan-bill/index.ts` that caps **total scans across all users and IPs combined** at **200 per rolling 24 hours**. Acts as a hard fuse on AI spend regardless of how attackers rotate accounts or IPs.
+## Goal
 
-## Changes
+You want the `bill-uploads` storage bucket to be accessible **only to you / the backend**, not to any signed-in user or customer. Today there is one SELECT policy that lets any authenticated user read files inside a folder matching their own user id. Since this app signs everyone in anonymously, "authenticated" effectively means "any visitor" — that's too open.
 
-**File: `supabase/functions/scan-bill/index.ts`**
+## Approach
 
-Add a new check right after the existing per-IP rate-limit block, before reading the request body or calling the AI:
+The `scan-bill` edge function writes to the bucket using the service role key, which bypasses RLS entirely. So clients never need any direct access. We can simply remove all client-facing policies and rely on default-deny.
 
-1. Define `GLOBAL_DAILY_LIMIT = 200`.
-2. Query `scan_logs` for total rows where `created_at >= now() - 24h` (no user/IP filter).
-3. If count ≥ 200, return `429` with message: *"Daily scan limit reached. Please try again tomorrow."*
-4. Otherwise proceed as normal.
+### Migration
 
-The check runs **before** the AI gateway call, so a tripped cap costs zero AI credits — only one cheap indexed count query.
+1. Drop the existing SELECT policy `Users can view own bill uploads` on `storage.objects`.
+2. Do not add any INSERT / UPDATE / DELETE / SELECT policies for `anon` or `authenticated`.
 
-## Why a rolling 24h window
+Result:
+- `anon` and `authenticated` roles → fully blocked from the bucket (RLS denies everything without a policy).
+- `service_role` (used by `scan-bill`) → continues to work, bypasses RLS.
+- Bucket is already private, so no public URL access either.
 
-Smoother than a midnight reset: an attacker can't burn 200 scans at 23:59 and another 200 at 00:01. The window slides continuously.
+### Security scanner
+
+The `bill_uploads_missing_insert_delete_policies` finding will be marked as **ignored** with the explanation that this bucket is intentionally backend-only: clients have zero access by design, and all writes happen through the edge function using the service role.
 
 ## What stays the same
 
-- Per-user cap: 10/hr
-- Per-IP cap: 5/hr
-- 5MB / MIME validation
-- Storage logging to `bill-uploads`
-
-## Tradeoffs to accept
-
-- If 200 legit scans happen in 24h, further users see the "try tomorrow" message until the window slides. Easy to raise later by editing one constant.
-- No alerting — you'd notice via `scan_logs` row count or the user-facing message. Can add later if needed.
-
-## Note
-
-The backend doesn't yet have first-class rate-limiting primitives, so this is an ad-hoc DB-counted check (same pattern as your existing per-user/per-IP limits). Good enough for a cost fuse on a personal project.
+- `scan-bill` edge function upload behavior — unchanged.
+- `scan_logs` table — unchanged.
+- App user flow — unchanged (users never needed to see the raw images anyway).
