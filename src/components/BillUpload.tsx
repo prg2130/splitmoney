@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Camera, Upload, Sparkles, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { toast } from "@/hooks/use-toast";
 
 interface BillUploadProps {
   onImageCaptured: (base64: string) => void;
@@ -26,7 +27,27 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
         processed = Array.isArray(result) ? result[0] : result;
       } catch (err) {
         console.error("HEIC conversion failed:", err);
+        toast({
+          title: "Couldn't read HEIC photo",
+          description:
+            "Your browser couldn't convert this iPhone HEIC image. Please re-save it as JPG/PNG, or in iPhone Settings > Camera > Formats choose 'Most Compatible'.",
+          variant: "destructive",
+        });
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
       }
+    }
+
+    // Hard cap before base64-encoding to keep the request under edge function limits
+    const MAX_BYTES = 5 * 1024 * 1024;
+    if (processed.size > MAX_BYTES) {
+      toast({
+        title: "Image too large",
+        description: `This image is ${(processed.size / 1024 / 1024).toFixed(1)} MB. Please use a photo under 5 MB.`,
+        variant: "destructive",
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
     }
 
     const reader = new FileReader();
