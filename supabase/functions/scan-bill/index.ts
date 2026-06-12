@@ -15,6 +15,8 @@ function buildCorsHeaders(origin: string | null): Record<string, string> {
     origin &&
     (ALLOWED_ORIGINS.has(origin) ||
       origin.endsWith(".lovable.app") ||
+      origin.endsWith(".lovableproject.com") ||
+      origin.endsWith(".lovable.dev") ||
       origin.endsWith(".payurshare.com"))
       ? origin
       : "https://splitmoney.lovable.app";
