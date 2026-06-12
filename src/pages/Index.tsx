@@ -35,6 +35,7 @@ const Index = () => {
       const { data, error } = await supabase.functions.invoke("scan-bill", {
         body: { imageBase64: base64 },
       });
+      // Note: invoke above is raced against a timeout so the UI never spins forever
 
       if (error) throw error;
 
