@@ -223,7 +223,11 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    console.log(`[scan-bill] calling AI gateway, mime=${mimeType} size=${decodedSize}`);
+    let response: Response;
+    try {
+      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      signal: AbortSignal.timeout(60_000),
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -294,7 +298,15 @@ Output raw numbers without thousands separators. Use the tool provided.`,
         ],
         tool_choice: { type: "function", function: { name: "extract_bill_items" } },
       }),
-    });
+      });
+    } catch (aiErr) {
+      console.error("[scan-bill] AI gateway fetch failed/timed out:", aiErr);
+      return new Response(
+        JSON.stringify({ error: "The scan took too long. Please try again with a clearer or smaller photo." }),
+        { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    console.log(`[scan-bill] AI gateway responded status=${response.status}`);
 
     if (!response.ok) {
       if (response.status === 429) {
