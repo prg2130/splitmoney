@@ -42,6 +42,10 @@ serve(async (req) => {
     req.headers.get("x-real-ip") ||
     "unknown";
 
+  console.log(
+    `[scan-bill] ${req.method} from ip=${ip} origin=${req.headers.get("origin")} content-length=${req.headers.get("content-length")}`
+  );
+
   try {
     // Require a valid Supabase user JWT
     const authHeader = req.headers.get("Authorization");
@@ -68,10 +72,11 @@ serve(async (req) => {
     }
 
     const userId = userData.user.id;
+    console.log(`[scan-bill] auth ok user=${userId}`);
 
     // Rate limit: max 10 scans per hour per user AND max 15 per hour per IP
     const RATE_LIMIT = 10;
-    const IP_RATE_LIMIT = 5;
+    const IP_RATE_LIMIT = 15;
     const WINDOW_MS = 60 * 60 * 1000;
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -134,7 +139,30 @@ serve(async (req) => {
       );
     }
 
-    const { imageBase64 } = await req.json();
+    // Read the request body with a hard timeout so a stalled upload can't
+    // hang the function until the gateway kills it (504).
+    let body: { imageBase64?: string };
+    try {
+      body = await Promise.race([
+        req.json(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("body-timeout")), 60_000)
+        ),
+      ]);
+    } catch (bodyErr) {
+      const isTimeout = bodyErr instanceof Error && bodyErr.message === "body-timeout";
+      console.error("[scan-bill] body read failed:", bodyErr);
+      return new Response(
+        JSON.stringify({
+          error: isTimeout
+            ? "Upload timed out. Your connection may be slow — try a smaller photo or better network."
+            : "Invalid request body",
+        }),
+        { status: isTimeout ? 408 : 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const { imageBase64 } = body;
+    console.log(`[scan-bill] body received, payload chars=${typeof imageBase64 === "string" ? imageBase64.length : 0}`);
 
     if (!imageBase64) {
       return new Response(
@@ -195,7 +223,11 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    console.log(`[scan-bill] calling AI gateway, mime=${mimeType} size=${decodedSize}`);
+    let response: Response;
+    try {
+      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      signal: AbortSignal.timeout(60_000),
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -266,7 +298,15 @@ Output raw numbers without thousands separators. Use the tool provided.`,
         ],
         tool_choice: { type: "function", function: { name: "extract_bill_items" } },
       }),
-    });
+      });
+    } catch (aiErr) {
+      console.error("[scan-bill] AI gateway fetch failed/timed out:", aiErr);
+      return new Response(
+        JSON.stringify({ error: "The scan took too long. Please try again with a clearer or smaller photo." }),
+        { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    console.log(`[scan-bill] AI gateway responded status=${response.status}`);
 
     if (!response.ok) {
       if (response.status === 429) {

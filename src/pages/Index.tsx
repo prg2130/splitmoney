@@ -32,9 +32,16 @@ const Index = () => {
         if (anonError) throw anonError;
       }
 
-      const { data, error } = await supabase.functions.invoke("scan-bill", {
-        body: { imageBase64: base64 },
-      });
+      // Race the scan against a 90s timeout so the UI never spins forever
+      const { data, error } = await Promise.race([
+        supabase.functions.invoke("scan-bill", { body: { imageBase64: base64 } }),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Scan timed out. Please check your connection and try again.")),
+            90_000
+          )
+        ),
+      ]);
 
       if (error) throw error;
 
