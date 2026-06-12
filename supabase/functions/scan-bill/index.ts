@@ -139,7 +139,30 @@ serve(async (req) => {
       );
     }
 
-    const { imageBase64 } = await req.json();
+    // Read the request body with a hard timeout so a stalled upload can't
+    // hang the function until the gateway kills it (504).
+    let body: { imageBase64?: string };
+    try {
+      body = await Promise.race([
+        req.json(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("body-timeout")), 60_000)
+        ),
+      ]);
+    } catch (bodyErr) {
+      const isTimeout = bodyErr instanceof Error && bodyErr.message === "body-timeout";
+      console.error("[scan-bill] body read failed:", bodyErr);
+      return new Response(
+        JSON.stringify({
+          error: isTimeout
+            ? "Upload timed out. Your connection may be slow — try a smaller photo or better network."
+            : "Invalid request body",
+        }),
+        { status: isTimeout ? 408 : 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const { imageBase64 } = body;
+    console.log(`[scan-bill] body received, payload chars=${typeof imageBase64 === "string" ? imageBase64.length : 0}`);
 
     if (!imageBase64) {
       return new Response(
