@@ -1,28 +1,28 @@
+## Problem
 
-## Goal
+On `payurshare.com`, the scan request is blocked by the browser:
 
-You want the `bill-uploads` storage bucket to be accessible **only to you / the backend**, not to any signed-in user or customer. Today there is one SELECT policy that lets any authenticated user read files inside a folder matching their own user id. Since this app signs everyone in anonymously, "authenticated" effectively means "any visitor" — that's too open.
+> Access to fetch at `…/functions/v1/scan-bill` from origin `https://www.payurshare.com` has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
 
-## Approach
+That's why the UI sits on "Scanning…" — the request never completes.
 
-The `scan-bill` edge function writes to the bucket using the service role key, which bypasses RLS entirely. So clients never need any direct access. We can simply remove all client-facing policies and rely on default-deny.
+It works on `splitmoney.lovable.app` because that origin is already in the deployed function's allowlist.
 
-### Migration
+## Root cause
 
-1. Drop the existing SELECT policy `Users can view own bill uploads` on `storage.objects`.
-2. Do not add any INSERT / UPDATE / DELETE / SELECT policies for `anon` or `authenticated`.
+`supabase/functions/scan-bill/index.ts` already lists `https://www.payurshare.com` and `https://payurshare.com` in `ALLOWED_ORIGINS`, but the live edge function on the server is an older build from before the custom domain was added, so it doesn't return CORS headers for those origins.
 
-Result:
-- `anon` and `authenticated` roles → fully blocked from the bucket (RLS denies everything without a policy).
-- `service_role` (used by `scan-bill`) → continues to work, bypasses RLS.
-- Bucket is already private, so no public URL access either.
+## Fix
 
-### Security scanner
+Force a fresh deploy of the `scan-bill` edge function so the current allowlist (which includes payurshare.com) goes live. No code changes needed.
 
-The `bill_uploads_missing_insert_delete_policies` finding will be marked as **ignored** with the explanation that this bucket is intentionally backend-only: clients have zero access by design, and all writes happen through the edge function using the service role.
+Steps:
+1. Trigger a redeploy of `scan-bill` via the deploy tool.
+2. On `payurshare.com`, hard-refresh (Cmd/Ctrl+Shift+R) and try scanning a bill again.
+3. If anything still fails, check console — but the CORS error should be gone and the scan should complete normally.
 
-## What stays the same
+## Notes
 
-- `scan-bill` edge function upload behavior — unchanged.
-- `scan_logs` table — unchanged.
-- App user flow — unchanged (users never needed to see the raw images anyway).
+- No frontend changes.
+- No DB / auth changes — anonymous sign-in from `payurshare.com` is already working (confirmed in auth logs).
+- HEIC/HEIF iPhone photos may also show a "HEIC conversion failed, falling back to server-side decode" warning — that's a separate, non-blocking message and the server already accepts HEIC/HEIF.
