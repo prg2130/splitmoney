@@ -14,23 +14,41 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
-    let processed: Blob = file;
     const isHeic =
       /\.(heic|heif)$/i.test(file.name) ||
       file.type === "image/heic" ||
       file.type === "image/heif";
 
-    if (isHeic) {
-      try {
-        const heic2any = (await import("heic2any")).default;
-        const result = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
-        processed = Array.isArray(result) ? result[0] : result;
-      } catch (err) {
-        console.error("HEIC conversion failed:", err);
+    let processed: Blob | null = null;
+
+    // 1) Try native browser decode (Safari handles HEIC natively).
+    //    This also downscales large photos so we stay under the edge function payload cap.
+    try {
+      processed = await downscaleToJpeg(file, 1600, 0.85);
+    } catch (err) {
+      // 2) For HEIC, fall back to WASM conversion (works on Chrome/Firefox).
+      if (isHeic) {
+        try {
+          const heic2any = (await import("heic2any")).default;
+          const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+          const jpegBlob = (Array.isArray(converted) ? converted[0] : converted) as Blob;
+          processed = await downscaleToJpeg(jpegBlob, 1600, 0.85);
+        } catch (heicErr) {
+          console.error("HEIC conversion failed:", heicErr);
+          toast({
+            title: "Couldn't read this HEIC photo",
+            description:
+              "This image uses an iPhone HDR/HEIC variant the browser can't decode. Tip: on iPhone, Settings → Camera → Formats → 'Most Compatible', or re-save the photo as JPG.",
+            variant: "destructive",
+          });
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
+      } else {
+        console.error("Image decode failed:", err);
         toast({
-          title: "Couldn't read HEIC photo",
-          description:
-            "Your browser couldn't convert this iPhone HEIC image. Please re-save it as JPG/PNG, or in iPhone Settings > Camera > Formats choose 'Most Compatible'.",
+          title: "Couldn't read this image",
+          description: "Please try a different photo (JPG or PNG).",
           variant: "destructive",
         });
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -38,12 +56,14 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
       }
     }
 
-    // Hard cap before base64-encoding to keep the request under edge function limits
+    if (!processed) return;
+
+    // Safety cap (downscale should keep us well under this).
     const MAX_BYTES = 5 * 1024 * 1024;
     if (processed.size > MAX_BYTES) {
       toast({
         title: "Image too large",
-        description: `This image is ${(processed.size / 1024 / 1024).toFixed(1)} MB. Please use a photo under 5 MB.`,
+        description: `This image is ${(processed.size / 1024 / 1024).toFixed(1)} MB after processing. Please use a smaller photo.`,
         variant: "destructive",
       });
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -58,6 +78,51 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
     };
     reader.readAsDataURL(processed);
   };
+
+  /** Decode an image via the browser and re-encode as a downscaled JPEG. */
+  const downscaleToJpeg = (blob: Blob, maxDim: number, quality: number): Promise<Blob> =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const { width, height } = img;
+          const scale = Math.min(1, maxDim / Math.max(width, height));
+          const w = Math.max(1, Math.round(width * scale));
+          const h = Math.max(1, Math.round(height * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            URL.revokeObjectURL(url);
+            reject(new Error("Canvas 2D context unavailable"));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob(
+            (out) => {
+              URL.revokeObjectURL(url);
+              if (!out) {
+                reject(new Error("Canvas encoding failed"));
+                return;
+              }
+              resolve(out);
+            },
+            "image/jpeg",
+            quality
+          );
+        } catch (e) {
+          URL.revokeObjectURL(url);
+          reject(e as Error);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Image decode failed"));
+      };
+      img.src = url;
+    });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
