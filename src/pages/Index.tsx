@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Receipt } from "lucide-react";
-import { BillItem, Person, ExtraSplitMethod, calculateSplit } from "@/lib/splitbill";
+import { BillItem, Person, ExtraSplitMethod, calculateSplit, TIP_ITEM_ID } from "@/lib/splitbill";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import BillUpload from "@/components/BillUpload";
@@ -87,6 +87,12 @@ const Index = () => {
 
   const results = step === "results" ? calculateSplit(items, people, extraSplitMethod) : [];
 
+  // If user added a tip on top of a scanned bill, the receipt's grandTotal needs
+  // to grow by the tip amount so the scaler doesn't collapse it back to zero.
+  const tipItem = items.find((i) => i.id === TIP_ITEM_ID);
+  const adjustedBillTotal =
+    billTotal !== null ? billTotal + (tipItem ? tipItem.price * tipItem.quantity : 0) : null;
+
   const stepOrder: Step[] = ["upload", "people", "assign", "results"];
   const currentIndex = stepOrder.indexOf(step);
 
@@ -167,7 +173,7 @@ const Index = () => {
         )}
 
         {step === "results" && (
-          <ResultsView results={results} currency={currency} billTotal={billTotal} extraSplitMethod={extraSplitMethod} onReset={handleReset} />
+          <ResultsView results={results} currency={currency} billTotal={adjustedBillTotal} extraSplitMethod={extraSplitMethod} onReset={handleReset} />
         )}
         </div>
 
