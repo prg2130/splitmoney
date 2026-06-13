@@ -1,43 +1,44 @@
-# Track total money split through SplitBill
+# Add Tip / Gratuity Option
 
-Right now the `scan_logs` table only records that a scan happened (user, IP, image path, size). It does **not** store the bill total, so we can't currently calculate how much money has been split.
+When a scanned receipt has no tip, service charge, or gratuity line, give the user a quick way to add one before splitting.
 
-To answer "how much money has been split", we need to start saving the bill total (and currency) for each successful scan, then surface that number to you as the owner.
+## Where it appears
 
-## What we'll build
+In the **Assign** step, on the last item card (next to the existing "How to split taxes & charges?" toggle), but only when the bill currently has **no extras** of type tip/service. If extras already exist on the bill, we skip showing it (avoid double-tipping).
 
-### 1. Store the bill total on every scan
-- Add two columns to `scan_logs`:
-  - `bill_total` (numeric) — the grand total the AI extracted
-  - `currency` (text) — the currency symbol (₹, $, etc.)
-- Update the `scan-bill` edge function to write these values when it logs a scan.
+## UI
 
-### 2. Owner analytics view
-Add a small "Money split" panel inside the existing More → Analytics area showing:
-- **Total value scanned** (all-time)
-- **Last 7 days / Last 30 days**
-- **Scan count** alongside each total
-- Broken down by currency (since the app supports ₹, $, etc.)
+A small card titled **"Add a tip?"** with:
 
-Access stays restricted to you (no public exposure). We'll read it via a secure database function so only the owner role can see aggregated totals.
+- Preset chips: **10%**, **15%**, **20%**, **25%**, **Custom**, **No tip** (default)
+- Tip is calculated as a percentage of the food subtotal (sum of non-extra items × quantities)
+- Selecting **Custom** reveals a small numeric input for a flat amount in the current currency
+- Live preview line: `Tip: ₹XX.XX`
 
-## Caveats worth knowing
+## Behavior
 
-- We can only count scans going **forward** — the 46 existing scans in the database don't have totals recorded, so they'll show as "unknown" or be excluded.
-- "Money split" = the grand total of bills scanned. It assumes each scanned bill was actually paid/split; the app has no way to confirm that.
-- Mixed currencies won't be summed into one number (₹ and $ stay separate) unless you want us to apply a fixed conversion rate.
+- Selecting a preset (or entering a custom amount) injects a synthetic extra item into the items list:
+  - `name: "Tip"`, `isExtra: true`, `quantity: 1`, `price: <computed>`, `assignedTo: []`
+  - Tagged with a stable id like `tip-synthetic` so re-selecting replaces the previous tip instead of stacking
+- Selecting **No tip** removes the synthetic tip item
+- The tip then flows through the existing `calculateSplit` logic and respects the user's **By order / Equally** choice for extras — so it's automatically split between people the same way taxes are
+- The Results screen already shows `Extras share` per person, so the tip is included there with no extra work
 
-## Technical details
+## Total reconciliation
 
-- Migration: `ALTER TABLE scan_logs ADD COLUMN bill_total numeric, ADD COLUMN currency text;`
-- Edge function `scan-bill`: include `bill_total: parsed.billTotal` and `currency: parsed.currency` in the existing `scan_logs` insert.
-- Aggregation: a `SECURITY DEFINER` SQL function `get_split_totals()` returning rows grouped by currency and time window, callable only by an `owner` role (using the standard `has_role` pattern).
-- Frontend: extend the Analytics view in the More panel with a card that calls the function and renders totals.
+The existing scaling logic uses the receipt's grand total as the source of truth. Adding a tip should **not** be scaled away, so:
 
-## Open question
+- When a synthetic tip is present, the effective "target total" used for scaling becomes `billTotal + tipAmount`
+- This keeps the per-person totals honest and prevents the scaler from collapsing the tip back to zero
 
-Do you want owner access gated by:
-1. A login (you sign in, role = owner), or
-2. A simple shared passcode on a hidden `/owner` page?
+## Files to change
 
-Either works — pick whichever you prefer and I'll wire it up in build mode.
+- `src/lib/splitbill.ts` — add a tiny helper `withTip(items, tipAmount)` that adds/removes the `tip-synthetic` extra item
+- `src/components/AssignItems.tsx` — render the new "Add a tip?" card on the last item view; manage selected preset + custom amount as local state; call back up to `Index` to update items
+- `src/pages/Index.tsx` — accept the updated items list (already does via `setItems`); pass an adjusted `billTotal` (base + tip) to `ResultsView` so scaling stays correct
+- `src/components/ResultsView.tsx` — no logic change; just receives the adjusted total
+
+## Out of scope
+
+- No DB / edge-function changes
+- No change to receipts that already include a tip / service charge — the card simply doesn't appear
