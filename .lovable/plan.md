@@ -1,22 +1,43 @@
-## Goal
-Persist every uploaded receipt image to the existing `bill-uploads` storage bucket so they're retained instead of discarded after scanning.
+# Track total money split through SplitBill
 
-## Changes
+Right now the `scan_logs` table only records that a scan happened (user, IP, image path, size). It does **not** store the bill total, so we can't currently calculate how much money has been split.
 
-1. **Storage bucket policy** (`bill-uploads` already exists, private)
-   - Add RLS policy on `storage.objects` allowing anonymous/authenticated users to INSERT into the `bill-uploads` bucket.
-   - Keep reads restricted (private bucket); we can generate signed URLs later if needed.
+To answer "how much money has been split", we need to start saving the bill total (and currency) for each successful scan, then surface that number to you as the owner.
 
-2. **Upload flow** (`src/components/BillUpload.tsx` / `src/pages/Index.tsx`)
-   - After the user picks/processes an image, upload the processed Blob to `bill-uploads/<timestamp>-<random>.jpg` via `supabase.storage.from('bill-uploads').upload(...)`.
-   - Run the upload in parallel with the `scan-bill` edge function call so scan latency isn't affected.
-   - Store the returned storage path in component state (and optionally pass to the bill summary), so future features can reference it.
+## What we'll build
 
-3. **No DB table yet** — just the file in storage. If you later want a `bills` table linking image → extracted data → participants, that's a follow-up.
+### 1. Store the bill total on every scan
+- Add two columns to `scan_logs`:
+  - `bill_total` (numeric) — the grand total the AI extracted
+  - `currency` (text) — the currency symbol (₹, $, etc.)
+- Update the `scan-bill` edge function to write these values when it logs a scan.
 
-## Open questions
-- **Retention**: keep images forever, or auto-delete after X days? (Affects storage cost.)
-- **Privacy**: receipts can contain card last-4 / names. Confirm you want them stored at all.
-- **Access**: should images be viewable later in the app (e.g. a "past bills" view), or stored purely as a backup/audit log?
+### 2. Owner analytics view
+Add a small "Money split" panel inside the existing More → Analytics area showing:
+- **Total value scanned** (all-time)
+- **Last 7 days / Last 30 days**
+- **Scan count** alongside each total
+- Broken down by currency (since the app supports ₹, $, etc.)
 
-Let me know on those three and I'll switch to build.
+Access stays restricted to you (no public exposure). We'll read it via a secure database function so only the owner role can see aggregated totals.
+
+## Caveats worth knowing
+
+- We can only count scans going **forward** — the 46 existing scans in the database don't have totals recorded, so they'll show as "unknown" or be excluded.
+- "Money split" = the grand total of bills scanned. It assumes each scanned bill was actually paid/split; the app has no way to confirm that.
+- Mixed currencies won't be summed into one number (₹ and $ stay separate) unless you want us to apply a fixed conversion rate.
+
+## Technical details
+
+- Migration: `ALTER TABLE scan_logs ADD COLUMN bill_total numeric, ADD COLUMN currency text;`
+- Edge function `scan-bill`: include `bill_total: parsed.billTotal` and `currency: parsed.currency` in the existing `scan_logs` insert.
+- Aggregation: a `SECURITY DEFINER` SQL function `get_split_totals()` returning rows grouped by currency and time window, callable only by an `owner` role (using the standard `has_role` pattern).
+- Frontend: extend the Analytics view in the More panel with a card that calls the function and renders totals.
+
+## Open question
+
+Do you want owner access gated by:
+1. A login (you sign in, role = owner), or
+2. A simple shared passcode on a hidden `/owner` page?
+
+Either works — pick whichever you prefer and I'll wire it up in build mode.
