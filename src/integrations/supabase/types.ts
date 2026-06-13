@@ -23,6 +23,7 @@ export type Database = {
           items_count: number | null
           people_count: number | null
           rating: number
+          session_id: string | null
         }
         Insert: {
           bill_total?: number | null
@@ -32,6 +33,7 @@ export type Database = {
           items_count?: number | null
           people_count?: number | null
           rating: number
+          session_id?: string | null
         }
         Update: {
           bill_total?: number | null
@@ -41,6 +43,7 @@ export type Database = {
           items_count?: number | null
           people_count?: number | null
           rating?: number
+          session_id?: string | null
         }
         Relationships: []
       }
@@ -77,6 +80,127 @@ export type Database = {
           mime_type?: string | null
           size_bytes?: number | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      split_items: {
+        Row: {
+          assigned_to: string[] | null
+          assignee_count: number | null
+          created_at: string
+          id: string
+          name: string | null
+          price: number | null
+          quantity: number | null
+          session_id: string
+        }
+        Insert: {
+          assigned_to?: string[] | null
+          assignee_count?: number | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          price?: number | null
+          quantity?: number | null
+          session_id: string
+        }
+        Update: {
+          assigned_to?: string[] | null
+          assignee_count?: number | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          price?: number | null
+          quantity?: number | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "split_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "split_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      split_participants: {
+        Row: {
+          amount_owed: number | null
+          created_at: string
+          id: string
+          items_assigned_count: number | null
+          name: string | null
+          session_id: string
+        }
+        Insert: {
+          amount_owed?: number | null
+          created_at?: string
+          id?: string
+          items_assigned_count?: number | null
+          name?: string | null
+          session_id: string
+        }
+        Update: {
+          amount_owed?: number | null
+          created_at?: string
+          id?: string
+          items_assigned_count?: number | null
+          name?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "split_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "split_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      split_sessions: {
+        Row: {
+          bill_total: number | null
+          created_at: string
+          currency: string | null
+          id: string
+          items_count: number | null
+          people_count: number | null
+          scan_log_id: string | null
+          service_total: number | null
+          split_mode: string | null
+          subtotal: number | null
+          tax_total: number | null
+          tip_total: number | null
+        }
+        Insert: {
+          bill_total?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          items_count?: number | null
+          people_count?: number | null
+          scan_log_id?: string | null
+          service_total?: number | null
+          split_mode?: string | null
+          subtotal?: number | null
+          tax_total?: number | null
+          tip_total?: number | null
+        }
+        Update: {
+          bill_total?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          items_count?: number | null
+          people_count?: number | null
+          scan_log_id?: string | null
+          service_total?: number | null
+          split_mode?: string | null
+          subtotal?: number | null
+          tax_total?: number | null
+          tip_total?: number | null
         }
         Relationships: []
       }
