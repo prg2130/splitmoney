@@ -199,6 +199,7 @@ const ResultsView = ({ results, items, people, currency, billTotal, extraSplitMe
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
+                  aria-label={`Rate ${star} stars`}
                   onMouseEnter={() => setHoveredStar(star)}
                   onMouseLeave={() => setHoveredStar(0)}
                   onClick={() => {

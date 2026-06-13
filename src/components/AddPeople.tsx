@@ -50,8 +50,9 @@ const AddPeople = ({ people, onPeopleChange, onContinue }: AddPeopleProps) => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="flex-1"
+          aria-label="Enter person name"
         />
-        <Button type="submit" size="icon" disabled={!name.trim()}>
+        <Button type="submit" size="icon" disabled={!name.trim()} aria-label="Add person">
           <UserPlus className="h-4 w-4" />
         </Button>
       </form>
@@ -67,7 +68,7 @@ const AddPeople = ({ people, onPeopleChange, onContinue }: AddPeopleProps) => {
               style={{ backgroundColor: person.color }}
             >
               {person.name}
-              <button onClick={() => removePerson(person.id)} className="rounded-full p-0.5 hover:bg-foreground/10">
+              <button onClick={() => removePerson(person.id)} className="rounded-full p-0.5 hover:bg-foreground/10" aria-label={`Remove ${person.name}`}>
                 <X className="h-3 w-3" />
               </button>
             </motion.span>
