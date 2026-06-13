@@ -3,6 +3,7 @@ import { Camera, Upload, Sparkles, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BillUploadProps {
   onImageCaptured: (base64: string) => void;
@@ -89,6 +90,17 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
         setPreview(base64);
       }
       onImageCaptured(base64);
+
+      // Persist the image to storage (fire-and-forget; does not block scan).
+      const ext = rawHeicFallback ? "heic" : "jpg";
+      const contentType = rawHeicFallback ? "image/heic" : "image/jpeg";
+      const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.${ext}`;
+      supabase.storage
+        .from("bill-uploads")
+        .upload(path, processed!, { contentType, upsert: false })
+        .then(({ error }) => {
+          if (error) console.warn("Bill image upload failed:", error.message);
+        });
     };
     reader.readAsDataURL(processed);
   };
