@@ -1,44 +1,57 @@
-# Add Tip / Gratuity Option
+# Persist star ratings in the database
 
-When a scanned receipt has no tip, service charge, or gratuity line, give the user a quick way to add one before splitting.
+Create a small `feedback` table so every star tap is saved and can be queried later for investor-facing analytics. No new pages, no UI changes beyond what's already there.
 
-## Where it appears
+## Database
 
-In the **Assign** step, on the last item card (next to the existing "How to split taxes & charges?" toggle), but only when the bill currently has **no extras** of type tip/service. If extras already exist on the bill, we skip showing it (avoid double-tipping).
+New table `public.feedback`:
 
-## UI
+- `rating` — integer 1–5 (CHECK constraint)
+- `bill_total` — numeric, nullable (copied from the current bill so you can show "avg rating per bill size")
+- `currency` — text, nullable
+- `people_count` — integer, nullable (how many people split the bill)
+- `items_count` — integer, nullable
+- standard `id`, `created_at`
 
-A small card titled **"Add a tip?"** with:
+RLS:
+- `INSERT` allowed for `anon` and `authenticated` (the app has no sign-in)
+- `SELECT` denied to `anon`/`authenticated`; only `service_role` reads it (you'll query via the migration/SQL tools when showing investors)
 
-- Preset chips: **10%**, **15%**, **20%**, **25%**, **Custom**, **No tip** (default)
-- Tip is calculated as a percentage of the food subtotal (sum of non-extra items × quantities)
-- Selecting **Custom** reveals a small numeric input for a flat amount in the current currency
-- Live preview line: `Tip: ₹XX.XX`
+GRANTs: `INSERT` to `anon, authenticated`; `ALL` to `service_role`.
 
-## Behavior
+## Code change (one file)
 
-- Selecting a preset (or entering a custom amount) injects a synthetic extra item into the items list:
-  - `name: "Tip"`, `isExtra: true`, `quantity: 1`, `price: <computed>`, `assignedTo: []`
-  - Tagged with a stable id like `tip-synthetic` so re-selecting replaces the previous tip instead of stacking
-- Selecting **No tip** removes the synthetic tip item
-- The tip then flows through the existing `calculateSplit` logic and respects the user's **By order / Equally** choice for extras — so it's automatically split between people the same way taxes are
-- The Results screen already shows `Extras share` per person, so the tip is included there with no extra work
+`src/components/ResultsView.tsx`:
 
-## Total reconciliation
+- In the existing star `onClick`, after `setRating(n)` and the toast, insert one row:
 
-The existing scaling logic uses the receipt's grand total as the source of truth. Adding a tip should **not** be scaled away, so:
+  ```ts
+  await supabase.from("feedback").insert({
+    rating: n,
+    bill_total: billTotal,
+    currency,
+    people_count: people.length,
+    items_count: items.length,
+  });
+  ```
 
-- When a synthetic tip is present, the effective "target total" used for scaling becomes `billTotal + tipAmount`
-- This keeps the per-person totals honest and prevents the scaler from collapsing the tip back to zero
+- Disable the stars after a rating is submitted (the UI already shows the selected state) to prevent duplicate inserts.
+- Fire-and-forget — never block the UI or surface an error toast on failure.
 
-## Files to change
+## How you'll read it later
 
-- `src/lib/splitbill.ts` — add a tiny helper `withTip(items, tipAmount)` that adds/removes the `tip-synthetic` extra item
-- `src/components/AssignItems.tsx` — render the new "Add a tip?" card on the last item view; manage selected preset + custom amount as local state; call back up to `Index` to update items
-- `src/pages/Index.tsx` — accept the updated items list (already does via `setItems`); pass an adjusted `billTotal` (base + tip) to `ResultsView` so scaling stays correct
-- `src/components/ResultsView.tsx` — no logic change; just receives the adjusted total
+Until you want a dashboard, query directly via the database tools:
+
+```sql
+SELECT rating, COUNT(*) FROM feedback GROUP BY rating ORDER BY rating;
+SELECT AVG(rating)::numeric(3,2), COUNT(*) FROM feedback
+  WHERE created_at >= now() - interval '30 days';
+```
+
+That's enough to tell investors "avg 4.6 stars across N submissions in the last 30 days". If/when you want a visual dashboard, we can add it to the existing Owner Analytics page later — no schema change needed.
 
 ## Out of scope
 
-- No DB / edge-function changes
-- No change to receipts that already include a tip / service charge — the card simply doesn't appear
+- No free-text comments (can be added later as a nullable `comment` column)
+- No link back to a specific `scan_logs` row (kept anonymous on purpose, matching the app's no-auth design)
+- No new analytics page
