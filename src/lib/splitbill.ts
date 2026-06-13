@@ -38,6 +38,41 @@ export function getColor(index: number): string {
   return COLORS[index % COLORS.length];
 }
 
+export const TIP_ITEM_ID = "tip-synthetic";
+
+/**
+ * Returns true if the bill already includes a tip/gratuity/service charge,
+ * so we don't suggest adding another one on top.
+ */
+export function hasTipLikeExtra(items: BillItem[]): boolean {
+  return items.some(
+    (i) => i.isExtra && /tip|gratuity|service/i.test(i.name)
+  );
+}
+
+/** Add/replace/remove the synthetic tip extra item. */
+export function withTip(items: BillItem[], tipAmount: number): BillItem[] {
+  const without = items.filter((i) => i.id !== TIP_ITEM_ID);
+  if (tipAmount <= 0) return without;
+  return [
+    ...without,
+    {
+      id: TIP_ITEM_ID,
+      name: "Tip",
+      price: Math.round(tipAmount * 100) / 100,
+      quantity: 1,
+      isExtra: true,
+      assignedTo: [],
+    },
+  ];
+}
+
+export function foodSubtotal(items: BillItem[]): number {
+  return items
+    .filter((i) => !i.isExtra)
+    .reduce((s, i) => s + i.price * i.quantity, 0);
+}
+
 export function calculateSplit(
   items: BillItem[],
   people: Person[],
