@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      feedback: {
+        Row: {
+          bill_total: number | null
+          created_at: string
+          currency: string | null
+          id: string
+          items_count: number | null
+          people_count: number | null
+          rating: number
+        }
+        Insert: {
+          bill_total?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          items_count?: number | null
+          people_count?: number | null
+          rating: number
+        }
+        Update: {
+          bill_total?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          items_count?: number | null
+          people_count?: number | null
+          rating?: number
+        }
+        Relationships: []
+      }
       scan_logs: {
         Row: {
           bill_total: number | null
