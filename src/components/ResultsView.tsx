@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { PersonTotal, ExtraSplitMethod } from "@/lib/splitbill";
+import { useEffect, useRef, useState } from "react";
+import { PersonTotal, ExtraSplitMethod, BillItem, Person } from "@/lib/splitbill";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, Share2, Star } from "lucide-react";
@@ -8,17 +8,20 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ResultsViewProps {
   results: PersonTotal[];
+  items: BillItem[];
+  people: Person[];
   currency: string;
   billTotal: number | null;
   extraSplitMethod: ExtraSplitMethod;
   onReset: () => void;
 }
 
-const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }: ResultsViewProps) => {
+const ResultsView = ({ results, items, people, currency, billTotal, extraSplitMethod, onReset }: ResultsViewProps) => {
   const { toast } = useToast();
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  const sessionIdRef = useRef<string | null>(null);
   const splitTotal = results.reduce((s, r) => s + r.total, 0);
 
   const grandTotal = billTotal ?? splitTotal;
@@ -28,6 +31,69 @@ const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }
     ...r,
     total: Math.round(r.total * scaleFactor * 100) / 100,
   }));
+
+  // Log the full split session once when results are shown (fire-and-forget)
+  const loggedRef = useRef(false);
+  useEffect(() => {
+    if (loggedRef.current) return;
+    loggedRef.current = true;
+
+    const idToName = new Map(people.map((p) => [p.id, p.name]));
+    const foodItems = items.filter((it) => !it.isExtra);
+    const extras = items.filter((it) => it.isExtra);
+    const subtotal = foodItems.reduce((s, it) => s + it.price * it.quantity, 0);
+    const sumExtras = (re: RegExp) =>
+      extras
+        .filter((it) => re.test(it.name))
+        .reduce((s, it) => s + it.price * it.quantity, 0);
+    const tax_total = sumExtras(/tax|vat|gst/i);
+    const tip_total = sumExtras(/tip|gratuity/i);
+    const service_total = sumExtras(/service/i);
+
+    (async () => {
+      try {
+        const { data: session, error } = await supabase
+          .from("split_sessions")
+          .insert({
+            bill_total: grandTotal,
+            currency,
+            subtotal,
+            tax_total: tax_total || null,
+            tip_total: tip_total || null,
+            service_total: service_total || null,
+            people_count: people.length,
+            items_count: foodItems.length,
+            split_mode: extraSplitMethod,
+          })
+          .select("id")
+          .single();
+        if (error || !session) return;
+        sessionIdRef.current = session.id;
+
+        void supabase.from("split_participants").insert(
+          adjustedResults.map((r) => ({
+            session_id: session.id,
+            name: r.person.name,
+            amount_owed: r.total,
+            items_assigned_count: r.items.length,
+          }))
+        );
+        void supabase.from("split_items").insert(
+          items.map((it) => ({
+            session_id: session.id,
+            name: it.name,
+            price: it.price,
+            quantity: it.quantity,
+            assigned_to: it.assignedTo.map((id) => idToName.get(id) ?? id),
+            assignee_count: it.assignedTo.length,
+          }))
+        );
+      } catch (e) {
+        console.warn("split logging failed", e);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleShare = () => {
     const text = adjustedResults
