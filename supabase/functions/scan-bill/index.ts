@@ -391,6 +391,8 @@ Output raw numbers without thousands separators. Use the tool provided.`,
         image_path: storedPath,
         mime_type: mimeType,
         size_bytes: decodedSize,
+        bill_total: typeof parsed.billTotal === "number" ? parsed.billTotal : null,
+        currency: typeof parsed.currency === "string" ? parsed.currency : null,
       });
     if (logError) {
       console.error("scan_logs insert failed:", logError);
