@@ -210,6 +210,7 @@ const ResultsView = ({ results, items, people, currency, billTotal, extraSplitMe
                       bill_total: billTotal,
                       currency,
                       people_count: results.length,
+                      session_id: sessionIdRef.current,
                     });
                   }}
                   className="p-1 transition-transform hover:scale-110"
