@@ -277,6 +277,7 @@ const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currenc
                 value={customTip}
                 onChange={(e) => applyTip("custom", e.target.value)}
                 className="h-9"
+                aria-label="Custom tip amount"
               />
             </div>
           )}
@@ -292,6 +293,7 @@ const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currenc
           <button
             key={item.id}
             onClick={() => setCurrentIndex(i)}
+            aria-label={`Go to ${item.name}`}
             className={`h-2.5 w-2.5 rounded-full transition-all ${
               i === currentIndex
                 ? "bg-primary scale-125"

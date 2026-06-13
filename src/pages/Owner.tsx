@@ -64,6 +64,7 @@ const Owner = () => {
               onChange={(e) => setPasscode(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && load()}
               placeholder="Passcode"
+              aria-label="Owner passcode"
             />
             <Button onClick={load} disabled={loading || !passcode} className="w-full">
               {loading ? "Loading…" : "Unlock"}

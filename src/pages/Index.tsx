@@ -125,7 +125,7 @@ const Index = () => {
           >
             <Receipt className="h-8 w-8 text-primary-foreground" />
           </motion.div>
-          <h1 className="text-3xl font-extrabold tracking-tight gradient-text">SplitBill</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight gradient-text">SplitBill — Scan and split restaurant bills</h1>
           <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground backdrop-blur">
             Scan · Assign · Split
           </div>
