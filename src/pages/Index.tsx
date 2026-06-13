@@ -173,7 +173,7 @@ const Index = () => {
         )}
 
         {step === "results" && (
-          <ResultsView results={results} currency={currency} billTotal={adjustedBillTotal} extraSplitMethod={extraSplitMethod} onReset={handleReset} />
+          <ResultsView results={results} items={items} people={people} currency={currency} billTotal={adjustedBillTotal} extraSplitMethod={extraSplitMethod} onReset={handleReset} />
         )}
         </div>
 
