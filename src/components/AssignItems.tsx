@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { BillItem, Person, ExtraSplitMethod } from "@/lib/splitbill";
+import { BillItem, Person, ExtraSplitMethod, TIP_ITEM_ID, hasTipLikeExtra, withTip, foodSubtotal } from "@/lib/splitbill";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowRight, ArrowLeft, Users, Percent, Equal } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AssignItemsProps {
@@ -20,6 +21,29 @@ const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currenc
   const foodItems = items.filter((i) => !i.isExtra);
   const hasExtras = items.some((i) => i.isExtra);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Tip controls — only relevant if the receipt didn't already include a tip/service charge
+  const showTipPicker = !hasTipLikeExtra(items.filter((i) => i.id !== TIP_ITEM_ID));
+  const currentTipItem = items.find((i) => i.id === TIP_ITEM_ID);
+  const subtotal = foodSubtotal(items);
+  const [tipChoice, setTipChoice] = useState<"none" | "10" | "15" | "20" | "25" | "custom">(
+    currentTipItem ? "custom" : "none"
+  );
+  const [customTip, setCustomTip] = useState<string>(
+    currentTipItem ? currentTipItem.price.toFixed(2) : ""
+  );
+
+  const applyTip = (choice: typeof tipChoice, customStr: string) => {
+    setTipChoice(choice);
+    setCustomTip(customStr);
+    let amount = 0;
+    if (choice === "custom") {
+      amount = parseFloat(customStr) || 0;
+    } else if (choice !== "none") {
+      amount = (subtotal * parseInt(choice, 10)) / 100;
+    }
+    onItemsChange(withTip(items, amount));
+  };
 
   const currentItem = foodItems[currentIndex];
 
@@ -201,6 +225,64 @@ const AssignItems = ({ items, people, onItemsChange, onContinue, onBack, currenc
               </div>
             </button>
           </div>
+        </motion.div>
+      )}
+
+      {/* Tip picker — only when bill has no existing tip/service line */}
+      {currentIndex === foodItems.length - 1 && showTipPicker && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border bg-card p-4 space-y-3"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-foreground">Add a tip?</p>
+            {currentTipItem && (
+              <span className="text-xs font-medium text-primary tabular">
+                +{currency}{currentTipItem.price.toFixed(2)}
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              { key: "none", label: "No tip" },
+              { key: "10", label: "10%" },
+              { key: "15", label: "15%" },
+              { key: "20", label: "20%" },
+              { key: "25", label: "25%" },
+              { key: "custom", label: "Custom" },
+            ] as const).map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => applyTip(opt.key, opt.key === "custom" ? customTip : "")}
+                className={`rounded-lg border-2 px-2 py-2 text-sm font-medium transition-all ${
+                  tipChoice === opt.key
+                    ? "border-primary bg-accent text-accent-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/30"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {tipChoice === "custom" && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{currency}</span>
+              <Input
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={customTip}
+                onChange={(e) => applyTip("custom", e.target.value)}
+                className="h-9"
+              />
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Tip is split between everyone using the option above.
+          </p>
         </motion.div>
       )}
 
