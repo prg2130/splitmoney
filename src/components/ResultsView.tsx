@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, Share2, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ResultsViewProps {
   results: PersonTotal[];
@@ -138,8 +139,15 @@ const ResultsView = ({ results, currency, billTotal, extraSplitMethod, onReset }
                     setRating(star);
                     setRatingSubmitted(true);
                     toast({ title: "Thank you!", description: `You rated us ${star}/5 stars` });
+                    void supabase.from("feedback").insert({
+                      rating: star,
+                      bill_total: billTotal,
+                      currency,
+                      people_count: results.length,
+                    });
                   }}
                   className="p-1 transition-transform hover:scale-110"
+                  disabled={ratingSubmitted}
                 >
                   <Star
                     className={`h-7 w-7 transition-colors ${
