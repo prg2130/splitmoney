@@ -16,7 +16,9 @@ export type Database = {
     Tables: {
       scan_logs: {
         Row: {
+          bill_total: number | null
           created_at: string
+          currency: string | null
           id: string
           image_path: string | null
           ip: string | null
@@ -25,7 +27,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          bill_total?: number | null
           created_at?: string
+          currency?: string | null
           id?: string
           image_path?: string | null
           ip?: string | null
@@ -34,7 +38,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          bill_total?: number | null
           created_at?: string
+          currency?: string | null
           id?: string
           image_path?: string | null
           ip?: string | null
@@ -49,7 +55,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_split_totals: {
+        Args: never
+        Returns: {
+          currency: string
+          scan_count: number
+          scan_count_30d: number
+          scan_count_7d: number
+          total_value: number
+          total_value_30d: number
+          total_value_7d: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
