@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { PersonTotal, ExtraSplitMethod, BillItem, Person } from "@/lib/splitbill";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Share2, Star } from "lucide-react";
+import { RotateCcw, Share2, Star, Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import PaybackSheet from "./PaybackSheet";
 
 interface ResultsViewProps {
   results: PersonTotal[];
@@ -21,6 +22,7 @@ const ResultsView = ({ results, items, people, currency, billTotal, extraSplitMe
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  const [paybackOpen, setPaybackOpen] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
   const splitTotal = results.reduce((s, r) => s + r.total, 0);
 
@@ -182,6 +184,22 @@ const ResultsView = ({ results, items, people, currency, billTotal, extraSplitMe
           Share
         </Button>
       </div>
+
+      <Button
+        variant="outline"
+        onClick={() => setPaybackOpen(true)}
+        className="w-full gap-2 border-primary/40 text-primary hover:bg-primary/5"
+      >
+        <Wallet className="h-4 w-4" />
+        Collect from group
+      </Button>
+
+      <PaybackSheet
+        open={paybackOpen}
+        onOpenChange={setPaybackOpen}
+        results={adjustedResults}
+        currency={currency}
+      />
 
       {/* Star Rating Survey */}
       <motion.div
