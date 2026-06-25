@@ -1,66 +1,54 @@
-## Goal
+# Peer-to-Peer Payback on Results Screen
 
-Persist the full split session (people, item assignments, per-person totals) to the database so you can later show investor metrics like average party size, average bill, splits per day, and most common items.
+Add a way for the person who paid the bill to collect money back from the other diners, using their existing payment apps (Venmo, Cash App, Zelle, PayPal). No money flows through SplitBill — we just generate payment links and QR codes.
 
-## Database changes
+## User flow
 
-Three new tables, all insert-only from the client (no auth, no reads from browser):
+1. On the results screen, the payer taps **"Collect from group"**.
+2. First time only: a sheet opens asking the payer to enter their handles (Venmo username, Cash App $cashtag, Zelle email/phone, PayPal.me username). Saved to the browser for next time.
+3. For each other diner, a card shows:
+   - Their name and amount owed
+   - A **QR code** containing a pre-filled payment link
+   - Chips to switch payment rail (Venmo / Cash App / Zelle / PayPal)
+   - A **"Send WhatsApp reminder"** button (opens WhatsApp with a pre-filled message)
+   - A **"Copy amount"** fallback button
 
-**1. `split_sessions`** — one row per completed split
-- `bill_total` (numeric), `currency` (text)
-- `subtotal`, `tax_total`, `tip_total`, `service_total` (numeric, nullable)
-- `people_count` (int), `items_count` (int)
-- `split_mode` (text — e.g. "proportional" / "equal" for extras)
-- `scan_log_id` (uuid, nullable — links to `scan_logs` row if available)
+The other diner scans the QR with their phone camera → their payment app opens with the amount and note pre-filled → they confirm and pay.
 
-**2. `split_participants`** — one row per person in a session
-- `session_id` (uuid → split_sessions)
-- `name` (text)
-- `amount_owed` (numeric)
-- `items_assigned_count` (int)
+## Payment link formats
 
-**3. `split_items`** — one row per receipt line item
-- `session_id` (uuid → split_sessions)
-- `name` (text), `price` (numeric), `quantity` (int)
-- `assigned_to` (text[] — names of people sharing it)
-- `assignee_count` (int)
+- **Venmo**: `https://venmo.com/{username}?txn=pay&amount={amt}&note={note}`
+- **Cash App**: `https://cash.app/${cashtag}/{amt}`
+- **PayPal**: `https://paypal.me/{username}/{amt}`
+- **Zelle**: no universal deep link exists → QR points to an info page (`/pay/zelle`) showing the payer's Zelle handle + amount with copy buttons
+- **Copy fallback**: plain text "Pay {payer} {amt} via {rail}: {handle}"
 
-### Access rules (RLS)
-- `anon` + `authenticated` can INSERT only
-- No SELECT/UPDATE/DELETE from the client
-- `service_role` has full access (so you can query for investor analytics)
+## WhatsApp share
 
-## Code changes
+Opens `https://wa.me/?text={encoded}` with a message like:
+> Hey {name}, you owe {amt} for {restaurant}. Pay me via Venmo: {link}
 
-- In `ResultsView.tsx`, replace the current single `feedback` insert with one combined write on the summary screen:
-  1. Insert one `split_sessions` row → get `session_id`
-  2. Bulk insert all `split_participants` for that session
-  3. Bulk insert all `split_items` with their assignees
-- Keep the existing `feedback` table for star ratings (unchanged), but also add `session_id` to feedback so a rating can be linked back to its session.
-- Writes are fire-and-forget (`void` + console.warn on error) so they never block the UI.
+User picks the contact inside WhatsApp.
 
-## What you'll be able to query later
+## Constraints
 
-```sql
--- Average party size, average bill, splits per day
-SELECT date_trunc('day', created_at) AS day,
-       COUNT(*) AS splits,
-       AVG(people_count) AS avg_party,
-       AVG(bill_total) AS avg_bill
-FROM split_sessions GROUP BY 1 ORDER BY 1 DESC;
+- No money moves through SplitBill.
+- No backend changes, no restaurant onboarding.
+- Payer's handles are stored in `localStorage` only — never sent anywhere.
+- No tracking of who actually paid back (open question below).
 
--- Most common items
-SELECT lower(name) AS item, COUNT(*) AS times
-FROM split_items GROUP BY 1 ORDER BY times DESC LIMIT 20;
+## Technical details
 
--- Rating tied to bill size
-SELECT f.rating, AVG(s.bill_total)
-FROM feedback f JOIN split_sessions s ON s.id = f.session_id
-GROUP BY f.rating;
-```
+- **New files**:
+  - `src/components/PaybackSheet.tsx` — the "Collect from group" sheet UI
+  - `src/lib/paymentLinks.ts` — builds the rail-specific URLs
+  - `src/lib/payerHandles.ts` — load/save handles from localStorage
+  - `src/pages/PayZelle.tsx` — Zelle info fallback page
+- **Edited files**:
+  - `src/components/ResultsView.tsx` — adds the "Collect from group" button
+  - `src/App.tsx` — registers the `/pay/zelle` route
+- **Dependency**: `qrcode.react` for QR rendering
 
-## Out of scope
+## Open question
 
-- No analytics page in the app (per your earlier instruction)
-- No auth, no editing/deleting sessions from the client
-- No image storage changes
+Should the payer see a **"Mark as paid"** checkbox next to each person (local-only, no backend), so they can track who has settled up? Or keep it strictly link-generation with no state?
