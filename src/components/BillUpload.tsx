@@ -216,6 +216,43 @@ const BillUpload = ({ onImageCaptured, isScanning }: BillUploadProps) => {
         className="hidden"
       />
 
+      {preview && !isScanning && (
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            className="gap-2"
+            aria-label="Choose a different photo to upload"
+            onClick={() => {
+              setPreview(null);
+              if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+                fileInputRef.current.removeAttribute("capture");
+                fileInputRef.current.click();
+              }
+            }}
+          >
+            <Upload className="h-4 w-4" />
+            Try another
+          </Button>
+          <Button
+            variant="gradient"
+            className="gap-2"
+            aria-label="Retake photo with camera"
+            onClick={() => {
+              setPreview(null);
+              if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+                fileInputRef.current.setAttribute("capture", "environment");
+                fileInputRef.current.click();
+              }
+            }}
+          >
+            <Camera className="h-4 w-4" />
+            Retake
+          </Button>
+        </div>
+      )}
+
       {!preview && (
         <div className="grid grid-cols-2 gap-3">
           <Button
