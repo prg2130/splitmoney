@@ -1,4 +1,5 @@
 import { PayerHandles, PaymentRail, RAIL_LABEL } from "./payerHandles";
+import { publicUrl } from "./publicUrl";
 
 function clean(handle: string, stripPrefix?: string): string {
   let h = handle.trim();
@@ -33,7 +34,7 @@ export function buildPaymentLink(
         name: handles.payerName,
         note,
       });
-      return `${window.location.origin}/pay/zelle?${params.toString()}`;
+      return publicUrl(`/pay/zelle?${params.toString()}`);
     }
   }
 }
