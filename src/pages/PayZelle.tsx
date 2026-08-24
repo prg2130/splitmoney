@@ -56,6 +56,7 @@ const PayZelle = () => {
         <Row label="Note" value={note} />
       </div>
     </div>
+    </>
   );
 };
 
