@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Receipt } from "lucide-react";
 import { BillItem, Person, ExtraSplitMethod, calculateSplit, TIP_ITEM_ID } from "@/lib/splitbill";
@@ -97,6 +98,19 @@ const Index = () => {
   const currentIndex = stepOrder.indexOf(step);
 
   return (
+    <>
+    <Helmet>
+      <title>PayUrShare — Split Restaurant Bills by Scanning the Receipt</title>
+      <meta
+        name="description"
+        content="Snap a photo of your restaurant receipt, assign each item to the person who ordered it, and split tax and tip fairly. Free, no signup."
+      />
+      <link rel="canonical" href="https://www.payurshare.com/" />
+      <meta property="og:title" content="PayUrShare — Split Restaurant Bills by Scanning the Receipt" />
+      <meta property="og:description" content="Scan a receipt, assign items, split tax and tip fairly. Free, no signup." />
+      <meta property="og:url" content="https://www.payurshare.com/" />
+      <meta property="og:type" content="website" />
+    </Helmet>
     <div className="relative min-h-screen overflow-hidden bg-background">
       {/* Ambient blurred blobs */}
       <div

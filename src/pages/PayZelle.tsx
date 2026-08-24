@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
@@ -31,6 +32,16 @@ const PayZelle = () => {
     ) : null;
 
   return (
+    <>
+    <Helmet>
+      <title>Pay with Zelle | PayUrShare</title>
+      <meta name="description" content="Send your share of the bill with Zelle using the handle and amount shown here." />
+      <meta name="robots" content="noindex, follow" />
+      <link rel="canonical" href="https://www.payurshare.com/pay/zelle" />
+      <meta property="og:title" content="Pay with Zelle | PayUrShare" />
+      <meta property="og:description" content="Send your share of the bill with Zelle." />
+      <meta property="og:url" content="https://www.payurshare.com/pay/zelle" />
+    </Helmet>
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-md mx-auto space-y-5">
         <div className="text-center space-y-2">

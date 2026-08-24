@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,19 @@ const Owner = () => {
   };
 
   return (
+    <>
+    <Helmet>
+      <title>Owner Analytics | PayUrShare</title>
+      <meta
+        name="description"
+        content="Private dashboard showing the total value of bills scanned and split through PayUrShare."
+      />
+      <meta name="robots" content="noindex, nofollow" />
+      <link rel="canonical" href="https://www.payurshare.com/owner" />
+      <meta property="og:title" content="Owner Analytics | PayUrShare" />
+      <meta property="og:description" content="Private PayUrShare analytics dashboard." />
+      <meta property="og:url" content="https://www.payurshare.com/owner" />
+    </Helmet>
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="mx-auto max-w-2xl">
         <h1 className="text-2xl font-bold mb-2">Owner Analytics</h1>
