@@ -12,3 +12,8 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /owner
+Disallow: /pay/
+
+Sitemap: https://www.payurshare.com/sitemap.xml
+

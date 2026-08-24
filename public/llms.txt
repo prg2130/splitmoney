@@ -1,0 +1,12 @@
+# PayUrShare
+
+> Scan a restaurant receipt and split the bill item by item with friends — no signup required.
+
+PayUrShare reads the items and prices off a photo of your receipt, lets you assign each dish to
+the person who ordered it, splits taxes, service charges and tips proportionally or equally, and
+then helps everyone pay the person who covered the bill.
+
+## Pages
+
+- [PayUrShare](/): Scan a receipt, add people, assign items, and see who owes what.
+- [SplitBill vs Splitwise](/compare/splitwise): How PayUrShare compares to Splitwise for restaurant bills.
