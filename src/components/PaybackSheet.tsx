@@ -18,7 +18,7 @@ import {
 } from "@/lib/payerHandles";
 import {
   buildCopyText,
-  buildPayPageLink,
+  buildRailDeepLink,
   buildReminderMessage,
   buildWhatsAppLink,
 } from "@/lib/paymentLinks";
@@ -220,7 +220,8 @@ const PaybackSheet = ({ open, onOpenChange, results, currency }: PaybackSheetPro
             <div className="space-y-4">
               {results.map((r) => {
                 const note = `Bill split${handles.payerName ? ` for ${handles.payerName}` : ""}`;
-                const link = buildPayPageLink(activeRails, handles, r.total, note);
+                const link = buildRailDeepLink("venmo", handles, r.total, note);
+                if (!link) return null;
                 const message = buildReminderMessage(r.person.name, r.total, currency, link);
                 const paid = paidIds.has(r.person.id);
 
@@ -258,8 +259,7 @@ const PaybackSheet = ({ open, onOpenChange, results, currency }: PaybackSheetPro
                         </div>
                         <div className="flex-1 space-y-2">
                           <p className="text-xs text-muted-foreground">
-                            Scan or send the link — they pick{" "}
-                            {activeRails.map((x) => RAIL_LABEL[x]).join(" or ")}.
+                            Scan or send the link to open Venmo directly.
                           </p>
                           <Button
                             size="sm"
