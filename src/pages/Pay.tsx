@@ -98,7 +98,7 @@ const Pay = () => {
                   </Button>
                 </div>
                 {o.link ? (
-                  <Button variant="gradient" className="w-full gap-2" onClick={() => window.open(o.link!, "_blank")}>
+                  <Button variant="gradient" className="w-full gap-2" onClick={() => openPay(o.link!, o.appLink)}>
                     <ExternalLink className="h-4 w-4" />
                     Open {RAIL_LABEL[o.rail]}
                   </Button>
