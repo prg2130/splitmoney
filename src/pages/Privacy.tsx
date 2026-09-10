@@ -134,7 +134,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">6. Security</h2>
+              <h2 className="text-lg font-bold text-foreground">7. Security</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 We use reasonable safeguards to protect data in transit and at rest. However,
                 no internet service is completely secure, and you use the app at your own
@@ -143,7 +143,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">7. Your Rights</h2>
+              <h2 className="text-lg font-bold text-foreground">8. Your Rights</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 You can clear your browser storage at any time to remove locally saved payment
                 handles. Because most data is anonymous, we may not be able to identify or
@@ -152,7 +152,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">8. Changes to This Policy</h2>
+              <h2 className="text-lg font-bold text-foreground">9. Changes to This Policy</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 We may update this Privacy Policy occasionally. The updated version will be
                 posted on this page with a revised effective date.
@@ -160,7 +160,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">9. Contact</h2>
+              <h2 className="text-lg font-bold text-foreground">10. Contact</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 If you have questions about this Privacy Policy or how your data is handled,
                 please contact the app operator.
