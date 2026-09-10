@@ -218,6 +218,18 @@ const PaybackSheet = ({ open, onOpenChange, results, currency }: PaybackSheetPro
               </Button>
             </div>
 
+            <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-xs text-muted-foreground">
+              <p className="font-semibold text-foreground">Double-check before sharing</p>
+              <p className="mt-1">
+                PayUrShare cannot refund or reverse payments sent through Venmo. Make sure the
+                username, amount, and note are correct.{" "}
+                <Link to="/collect-disclaimer" className="underline hover:text-foreground transition-colors">
+                  Learn more
+                </Link>
+                .
+              </p>
+            </div>
+
             <div className="space-y-4">
               {results.map((r) => {
                 const note = `Bill split${handles.payerName ? ` for ${handles.payerName}` : ""}`;
