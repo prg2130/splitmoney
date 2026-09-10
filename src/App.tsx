@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound.tsx";
 import Owner from "./pages/Owner.tsx";
 import CompareSplitwise from "./pages/CompareSplitwise.tsx";
 import PayZelle from "./pages/PayZelle.tsx";
+import Pay from "./pages/Pay.tsx";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/owner" element={<Owner />} />
           <Route path="/compare/splitwise" element={<CompareSplitwise />} />
           <Route path="/pay/zelle" element={<PayZelle />} />
+          <Route path="/pay" element={<Pay />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
