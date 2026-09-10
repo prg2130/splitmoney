@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -298,6 +299,18 @@ const PaybackSheet = ({ open, onOpenChange, results, currency }: PaybackSheetPro
             </div>
           </div>
         )}
+
+        <p className="text-xs text-muted-foreground mt-6 text-center">
+          Payment links are for personal use only. By sharing, you agree to our{" "}
+          <Link to="/terms" className="underline hover:text-foreground transition-colors">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link to="/collect-disclaimer" className="underline hover:text-foreground transition-colors">
+            Payment Disclaimer
+          </Link>
+          . PayUrShare does not process or guarantee payments.
+        </p>
       </SheetContent>
     </Sheet>
   );

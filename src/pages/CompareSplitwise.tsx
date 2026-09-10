@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import Footer from "@/components/Footer";
 import {
   Camera,
   Users,
@@ -376,6 +377,7 @@ const CompareSplitwise = () => {
               Back to SplitBill
             </Link>
           </div>
+          <Footer />
         </div>
       </div>
     </>

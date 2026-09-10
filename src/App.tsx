@@ -9,6 +9,9 @@ import Owner from "./pages/Owner.tsx";
 import CompareSplitwise from "./pages/CompareSplitwise.tsx";
 import PayZelle from "./pages/PayZelle.tsx";
 import Pay from "./pages/Pay.tsx";
+import Terms from "./pages/Terms.tsx";
+import Privacy from "./pages/Privacy.tsx";
+import CollectDisclaimer from "./pages/CollectDisclaimer.tsx";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +27,9 @@ const App = () => (
           <Route path="/compare/splitwise" element={<CompareSplitwise />} />
           <Route path="/pay/zelle" element={<PayZelle />} />
           <Route path="/pay" element={<Pay />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/collect-disclaimer" element={<CollectDisclaimer />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
