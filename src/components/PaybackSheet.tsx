@@ -76,8 +76,8 @@ const PaybackSheet = ({ open, onOpenChange, results, currency }: PaybackSheetPro
     const h = loadPayerHandles();
     setHandles(h);
     const saved = availableRails(h);
-    setSelected(saved);
-    setStep(saved.length > 0 ? "share" : "apps");
+    setSelected(saved.length > 0 ? saved : ["venmo"]);
+    setStep(saved.length > 0 ? "share" : "details");
   }, [open]);
 
   const activeRails = useMemo(
