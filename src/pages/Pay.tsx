@@ -22,12 +22,13 @@ const Pay = () => {
     toast({ title: `${label} copied` });
   };
 
-  const options: { rail: PaymentRail; handle: string; link: string | null }[] = [];
+  const options: { rail: PaymentRail; handle: string; link: string | null; appLink?: string }[] = [];
   if (venmo)
     options.push({
       rail: "venmo",
       handle: `@${venmo}`,
-      link: `https://venmo.com/${encodeURIComponent(venmo)}?txn=pay&amount=${amount}&note=${encodeURIComponent(note)}`,
+      link: `https://venmo.com/u/${encodeURIComponent(venmo)}?txn=pay&amount=${amount}&note=${encodeURIComponent(note)}`,
+      appLink: `venmo://paycharge?txn=pay&recipients=${encodeURIComponent(venmo)}&amount=${amount}&note=${encodeURIComponent(note)}`,
     });
   if (cashapp)
     options.push({
