@@ -98,7 +98,18 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">3. How We Use Information</h2>
+              <h2 className="text-lg font-bold text-foreground">3. Venmo Payments and Refunds Are Not Handled by PayUrShare</h2>
+              <p className="text-sm text-muted-foreground mt-1.5">
+                PayUrShare does not process, hold, guarantee, or refund any payments. When you
+                or a friend use a Venmo link, the transaction takes place directly between you
+                and the other person on Venmo. PayUrShare cannot see, guarantee, reverse, or
+                refund any Venmo payment. Any dispute, failed payment, or refund request must be
+                handled through Venmo or the relevant payment service.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground">4. How We Use Information</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 We use collected data solely to operate and improve PayUrShare, including
                 improving receipt scanning accuracy and understanding usage patterns.
@@ -106,7 +117,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">4. Cookies and Local Storage</h2>
+              <h2 className="text-lg font-bold text-foreground">5. Cookies and Local Storage</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 The app uses browser local storage to remember your payment handles between
                 visits. We do not use tracking cookies or third-party advertising trackers.
@@ -114,7 +125,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">5. Data Sharing</h2>
+              <h2 className="text-lg font-bold text-foreground">6. Data Sharing</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 We do not sell, rent, or share personal information with third parties, except
                 as required to provide the service (for example, sending receipt images to our
@@ -123,7 +134,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">6. Security</h2>
+              <h2 className="text-lg font-bold text-foreground">7. Security</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 We use reasonable safeguards to protect data in transit and at rest. However,
                 no internet service is completely secure, and you use the app at your own
@@ -132,7 +143,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">7. Your Rights</h2>
+              <h2 className="text-lg font-bold text-foreground">8. Your Rights</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 You can clear your browser storage at any time to remove locally saved payment
                 handles. Because most data is anonymous, we may not be able to identify or
@@ -141,7 +152,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">8. Changes to This Policy</h2>
+              <h2 className="text-lg font-bold text-foreground">9. Changes to This Policy</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 We may update this Privacy Policy occasionally. The updated version will be
                 posted on this page with a revised effective date.
@@ -149,7 +160,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">9. Contact</h2>
+              <h2 className="text-lg font-bold text-foreground">10. Contact</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 If you have questions about this Privacy Policy or how your data is handled,
                 please contact the app operator.

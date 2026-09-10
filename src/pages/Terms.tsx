@@ -96,21 +96,25 @@ const Terms = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">3. Payment Links Are for Personal Use</h2>
+              <h2 className="text-lg font-bold text-foreground">3. Venmo and Payment Links Are for Personal Use Only</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
-                The payment links created by PayUrShare are intended for personal, peer-to-peer
-                use only—such as reimbursing a friend for a share of dinner. They are not for
-                commercial sales, fundraising, or any other business purpose.
+                The Venmo links and payment links created by PayUrShare are intended solely for
+                personal, peer-to-peer use—such as reimbursing a friend for a share of dinner.
+                They may not be used for commercial sales, fundraising, business transactions, or
+                any other non-personal purpose.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">4. No Liability for Payments</h2>
+              <h2 className="text-lg font-bold text-foreground">4. We Do Not Process, Guarantee, or Refund Payments</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
-                PayUrShare does not process, transmit, hold, or guarantee any payments. All
-                money movement happens directly between you and the third-party payment app
-                you choose (for example, Venmo). PayUrShare is not responsible if a payment
-                fails, is sent to the wrong person, is disputed, or is never received.
+                PayUrShare does not process, transmit, hold, guarantee, or refund any payments.
+                All money movement happens directly between you and the recipient through the
+                third-party payment app you choose (such as Venmo). PayUrShare cannot guarantee
+                that a payment will be sent, received, or returned, and we are not responsible if
+                a payment fails, is sent to the wrong person, is disputed, or is never received.
+                We cannot reverse or refund transactions that are completed through Venmo or any
+                other payment service.
               </p>
             </section>
 
@@ -118,8 +122,9 @@ const Terms = () => {
               <h2 className="text-lg font-bold text-foreground">5. Third-Party Services</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 Venmo is a trademark of PayPal, Inc. and is not affiliated with PayUrShare. Use
-                of Venmo or any other payment service is subject to that service&apos;s own terms
-                and conditions.
+                of Venmo or any other payment service is subject to that service&apos;s own terms,
+                fees, privacy practices, and conditions. We do not control these services and we
+                are not liable for their availability, security, or actions.
               </p>
             </section>
 
