@@ -152,7 +152,17 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">9. Changes to This Policy</h2>
+              <h2 className="text-lg font-bold text-foreground">9. International Users</h2>
+              <p className="text-sm text-muted-foreground mt-1.5">
+                PayUrShare is operated from the United States. If you use the app from another
+                country, your information may be processed, stored, or transferred in the U.S. or
+                other jurisdictions with different privacy laws. You are responsible for
+                ensuring that your use of the app complies with the laws that apply to you.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground">10. Changes to This Policy</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 We may update this Privacy Policy occasionally. The updated version will be
                 posted on this page with a revised effective date.
@@ -160,7 +170,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">10. Contact</h2>
+              <h2 className="text-lg font-bold text-foreground">11. Contact</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 If you have questions about this Privacy Policy or how your data is handled,
                 please contact the app operator.

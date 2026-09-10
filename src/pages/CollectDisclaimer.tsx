@@ -78,14 +78,20 @@ const CollectDisclaimer = () => {
             transition={{ delay: 0.1 }}
             className="glass-card p-5 sm:p-6 space-y-6"
           >
-            <section>
+            <section className="rounded-xl border border-warning/30 bg-warning/5 p-4">
               <h2 className="text-lg font-bold text-foreground">We Do Not Process Payments</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
-                PayUrShare is not a bank, money transmitter, payment processor, or escrow
-                service. We do not touch, hold, or move any money. The “Collect from group”
-                feature only creates links that point to third-party payment apps such as
-                Venmo.
+                PayUrShare is not a bank, money transmitter, payment processor, escrow
+                service, or payment intermediary. We do not touch, hold, or move any money. The
+                “Collect from group” feature only creates links that point to third-party payment
+                apps such as Venmo.
               </p>
+              <ul className="mt-3 list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>We cannot guarantee that a link will open the correct app.</li>
+                <li>We cannot guarantee that a payment will go through or be received.</li>
+                <li>We cannot reverse, refund, recover, or cancel any payment.</li>
+                <li>We do not verify Venmo usernames, bank accounts, or recipient details.</li>
+              </ul>
             </section>
 
             <section>
@@ -93,7 +99,8 @@ const CollectDisclaimer = () => {
               <p className="text-sm text-muted-foreground mt-1.5">
                 When someone taps a link, they leave PayUrShare and complete the payment on the
                 third-party app. Any agreement, dispute, or problem related to the payment is
-                between you and the sender.
+                solely between you and the sender. PayUrShare is not a party to those
+                transactions.
               </p>
             </section>
 
@@ -110,8 +117,9 @@ const CollectDisclaimer = () => {
               <h2 className="text-lg font-bold text-foreground">Check the Details Before Sending</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 You are responsible for making sure the Venmo username, amount, and note are
-                correct before sharing a link. PayUrShare cannot reverse or recover a payment
-                sent to the wrong person or for the wrong amount.
+                correct before sharing a link. A typo or incorrect amount could send money to
+                the wrong person. PayUrShare cannot reverse or recover a payment sent to the
+                wrong person or for the wrong amount.
               </p>
             </section>
 
@@ -125,11 +133,17 @@ const CollectDisclaimer = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">No Guarantees</h2>
+              <h2 className="text-lg font-bold text-foreground">You Assume the Risk</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
-                We do not guarantee that a link will open the correct app, that a payment will
-                go through, or that funds will be received. Payment success depends on the
-                third-party app and the devices being used.
+                You use the “Collect from group” feature at your own risk. By sharing a payment
+                link, you acknowledge that PayUrShare does not guarantee payment collection and
+                is not responsible for any loss, dispute, failed payment, or incorrect
+                transfer. Please read our full{" "}
+                <Link to="/terms" className="underline hover:text-foreground transition-colors">
+                  Terms of Service
+                </Link>{" "}
+                for the complete disclaimer, limitation of liability, and indemnification
+                terms.
               </p>
             </section>
 

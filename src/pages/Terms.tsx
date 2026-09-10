@@ -82,7 +82,8 @@ const Terms = () => {
               <h2 className="text-lg font-bold text-foreground">1. Acceptance of Terms</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 By accessing or using PayUrShare, you agree to be bound by these Terms of
-                Service. If you do not agree, please do not use the app.
+                Service. If you do not agree, please do not use the app. These Terms apply to all
+                visitors and users, including anyone you share a payment link with.
               </p>
             </section>
 
@@ -91,7 +92,9 @@ const Terms = () => {
               <p className="text-sm text-muted-foreground mt-1.5">
                 PayUrShare helps you split restaurant bills by scanning receipts and
                 assigning items to people. It can also generate shareable links to third-party
-                payment services such as Venmo so friends can pay you back.
+                payment services such as Venmo so friends can pay you back. We are a convenience
+                tool only; we are not a party to any payment or agreement between you and your
+                friends.
               </p>
             </section>
 
@@ -131,38 +134,83 @@ const Terms = () => {
             <section>
               <h2 className="text-lg font-bold text-foreground">6. Accuracy</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
-                You are responsible for confirming that receipt scan results, item assignments,
-                and payment amounts are correct before sharing them with others.
+                Receipt scanning and split calculations are generated automatically and may
+                contain errors. You are responsible for confirming that receipt scan results,
+                item assignments, tax/tip amounts, and payment amounts are correct before
+                sharing them with others or sending money.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">7. Disclaimer of Warranties</h2>
+              <h2 className="text-lg font-bold text-foreground">7. Assumption of Risk</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
-                PayUrShare is provided “as is” without warranties of any kind. We do not
-                guarantee that the app will always be available, error-free, or secure.
+                You use PayUrShare at your own risk. You are solely responsible for verifying
+                the recipient, amount, and note on every payment link before sharing it. You
+                assume full responsibility for any loss, dispute, overpayment, underpayment, or
+                failed payment that results from using the app or any link it generates.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">8. Limitation of Liability</h2>
+              <h2 className="text-lg font-bold text-foreground">8. Disclaimer of Warranties</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
-                To the fullest extent permitted by law, PayUrShare and its operators will not
-                be liable for any damages arising from your use of the app, including but not
-                limited to payment disputes, data loss, or service interruptions.
+                PayUrShare is provided on an “as is” and “as available” basis without warranties
+                of any kind, whether express, implied, or statutory. We do not warrant that the
+                app will be accurate, reliable, error-free, secure, uninterrupted, or free of
+                harmful components. Your use of receipt scans, splits, and payment links is at
+                your sole risk.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">9. Changes to These Terms</h2>
+              <h2 className="text-lg font-bold text-foreground">9. Limitation of Liability</h2>
+              <p className="text-sm text-muted-foreground mt-1.5">
+                To the fullest extent permitted by applicable law, PayUrShare and its operators,
+                affiliates, officers, employees, and agents will not be liable for any indirect,
+                incidental, special, consequential, or punitive damages, including lost profits,
+                data loss, or reputational harm, arising out of or related to your use of the app,
+                payment links, or third-party payment services. Our total liability for any claim
+                will not exceed the greater of (a) the amount you paid to use PayUrShare in the
+                twelve (12) months preceding the claim, or (b) zero dollars ($0). Some
+                jurisdictions do not allow certain limitations, so these limits may not apply to
+                you.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground">10. Indemnification</h2>
+              <p className="text-sm text-muted-foreground mt-1.5">
+                You agree to defend, indemnify, and hold harmless PayUrShare and its operators
+                from any claim, liability, damage, or expense (including reasonable legal fees)
+                arising out of your misuse of the app, your violation of these Terms, inaccurate
+                information you share through a payment link, or a dispute between you and
+                another user.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground">11. Governing Law and International Use</h2>
+              <p className="text-sm text-muted-foreground mt-1.5">
+                These Terms are governed by the laws of the jurisdiction where the operator of
+                PayUrShare is established, without regard to conflict-of-law principles. If you
+                access PayUrShare from outside the United States, you do so at your own risk and
+                are responsible for complying with the laws of your country. Nothing in these
+                Terms limits any mandatory consumer protection rights you may have under the law
+                of your jurisdiction.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground">12. Changes to These Terms</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 We may update these Terms from time to time. Continued use of the app after
-                changes means you accept the updated Terms.
+                changes means you accept the updated Terms. Material changes will be reflected
+                with a revised effective date on this page.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground">10. Contact</h2>
+              <h2 className="text-lg font-bold text-foreground">13. Contact</h2>
               <p className="text-sm text-muted-foreground mt-1.5">
                 For questions about these Terms, please reach out through the app or email the
                 operator directly.
