@@ -22,6 +22,19 @@ const Pay = () => {
     toast({ title: `${label} copied` });
   };
 
+  const openPay = (webLink: string, appLink?: string) => {
+    if (appLink && /iPhone|iPad|Android/i.test(navigator.userAgent)) {
+      const started = Date.now();
+      window.location.href = appLink;
+      // If the app didn't take over, fall back to the web page.
+      window.setTimeout(() => {
+        if (Date.now() - started < 2000 && !document.hidden) window.location.href = webLink;
+      }, 1200);
+      return;
+    }
+    window.open(webLink, "_blank");
+  };
+
   const options: { rail: PaymentRail; handle: string; link: string | null; appLink?: string }[] = [];
   if (venmo)
     options.push({
