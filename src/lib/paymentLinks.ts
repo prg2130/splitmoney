@@ -106,5 +106,5 @@ export function buildReminderMessage(
   currency: string,
   link: string
 ): string {
-  return `Hey ${name}, your share of the bill is ${currency}${amount.toFixed(2)}. Pay here (Venmo, Cash App, PayPal or Zelle): ${link}`;
+  return `Hey ${name}, your share of the bill is ${currency}${amount.toFixed(2)}. Pay me on Venmo: ${link}`;
 }
