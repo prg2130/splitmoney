@@ -10,6 +10,7 @@ import AddPeople from "@/components/AddPeople";
 import AssignItems from "@/components/AssignItems";
 import ResultsView from "@/components/ResultsView";
 import StepProgress from "@/components/StepProgress";
+import Footer from "@/components/Footer";
 
 type Step = "upload" | "people" | "assign" | "results";
 
@@ -232,6 +233,7 @@ const Index = () => {
           </motion.div>
         )}
       </div>
+      <Footer />
     </div>
     </>
   );
