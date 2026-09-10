@@ -32,7 +32,7 @@ interface PaybackSheetProps {
 
 type Step = "apps" | "details" | "share";
 
-const ALL_RAILS: PaymentRail[] = ["venmo", "cashapp", "paypal", "zelle"];
+const ALL_RAILS: PaymentRail[] = ["venmo"];
 
 const RAIL_META: Record<
   PaymentRail,
