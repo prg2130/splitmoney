@@ -19,7 +19,7 @@ export function buildRailDeepLink(
   switch (rail) {
     case "venmo": {
       const u = clean(handles.venmo);
-      return `https://venmo.com/${encodeURIComponent(u)}?txn=pay&amount=${amt}&note=${encodeURIComponent(note)}`;
+      return `https://venmo.com/u/${encodeURIComponent(u)}?txn=pay&amount=${amt}&note=${encodeURIComponent(note)}`;
     }
     case "cashapp": {
       const u = clean(handles.cashapp, "$");
@@ -38,6 +38,7 @@ export function railHandleDisplay(rail: PaymentRail, handles: PayerHandles): str
   switch (rail) {
     case "venmo":
       return `@${clean(handles.venmo)}`;
+
     case "cashapp":
       return `$${clean(handles.cashapp, "$")}`;
     case "paypal":

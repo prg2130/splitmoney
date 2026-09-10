@@ -22,12 +22,26 @@ const Pay = () => {
     toast({ title: `${label} copied` });
   };
 
-  const options: { rail: PaymentRail; handle: string; link: string | null }[] = [];
+  const openPay = (webLink: string, appLink?: string) => {
+    if (appLink && /iPhone|iPad|Android/i.test(navigator.userAgent)) {
+      const started = Date.now();
+      window.location.href = appLink;
+      // If the app didn't take over, fall back to the web page.
+      window.setTimeout(() => {
+        if (Date.now() - started < 2000 && !document.hidden) window.location.href = webLink;
+      }, 1200);
+      return;
+    }
+    window.open(webLink, "_blank");
+  };
+
+  const options: { rail: PaymentRail; handle: string; link: string | null; appLink?: string }[] = [];
   if (venmo)
     options.push({
       rail: "venmo",
       handle: `@${venmo}`,
-      link: `https://venmo.com/${encodeURIComponent(venmo)}?txn=pay&amount=${amount}&note=${encodeURIComponent(note)}`,
+      link: `https://venmo.com/u/${encodeURIComponent(venmo)}?txn=pay&amount=${amount}&note=${encodeURIComponent(note)}`,
+      appLink: `venmo://paycharge?txn=pay&recipients=${encodeURIComponent(venmo)}&amount=${amount}&note=${encodeURIComponent(note)}`,
     });
   if (cashapp)
     options.push({
@@ -84,7 +98,7 @@ const Pay = () => {
                   </Button>
                 </div>
                 {o.link ? (
-                  <Button variant="gradient" className="w-full gap-2" onClick={() => window.open(o.link!, "_blank")}>
+                  <Button variant="gradient" className="w-full gap-2" onClick={() => openPay(o.link!, o.appLink)}>
                     <ExternalLink className="h-4 w-4" />
                     Open {RAIL_LABEL[o.rail]}
                   </Button>
