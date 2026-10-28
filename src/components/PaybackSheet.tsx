@@ -76,7 +76,8 @@ const PaybackSheet = ({ open, onOpenChange, results, currency }: PaybackSheetPro
     if (!open) return;
     const h = loadPayerHandles();
     setHandles(h);
-    const saved = availableRails(h);
+    // Only consider rails we actually support; old saves may contain other apps' handles.
+    const saved = availableRails(h).filter((r) => ALL_RAILS.includes(r));
     setSelected(saved.length > 0 ? saved : ["venmo"]);
     setStep(saved.length > 0 ? "share" : "details");
   }, [open]);

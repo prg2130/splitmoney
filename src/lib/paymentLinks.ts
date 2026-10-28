@@ -19,14 +19,17 @@ export function buildRailDeepLink(
   switch (rail) {
     case "venmo": {
       const u = clean(handles.venmo);
+      if (!u) return null;
       return `https://venmo.com/u/${encodeURIComponent(u)}?txn=pay&amount=${amt}&note=${encodeURIComponent(note)}`;
     }
     case "cashapp": {
       const u = clean(handles.cashapp, "$");
+      if (!u) return null;
       return `https://cash.app/$${encodeURIComponent(u)}/${amt}`;
     }
     case "paypal": {
       const u = clean(handles.paypal);
+      if (!u) return null;
       return `https://paypal.me/${encodeURIComponent(u)}/${amt}`;
     }
     case "zelle":
